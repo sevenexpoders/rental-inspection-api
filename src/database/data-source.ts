@@ -8,8 +8,10 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-
-  // ✅ FIX: support dev + prod
+ssl: {
+    rejectUnauthorized: false,
+  },
+  // FIX: support dev + prod
   entities: [
     'src/**/*.entity.ts',
     'dist/**/*.entity.js'
