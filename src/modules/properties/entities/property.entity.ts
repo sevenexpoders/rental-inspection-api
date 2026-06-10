@@ -32,12 +32,10 @@ export class Property extends BaseEntity {
   @Column({ type: 'varchar', length: 100, nullable: true })
   country!: string;
 
-  // 🔥 WHO CREATED PROPERTY
   @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'created_by' })
   createdBy!: User;
 
-  // 🔥 RELATIONS
   @OneToMany(() => PropertyParty, party => party.property)
   parties!: PropertyParty[];
 

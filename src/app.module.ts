@@ -4,6 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 import { databaseConfig } from './config/database.config';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { PropertiesModule } from './modules/properties/properties.module';
+import { PropertyPartiesModule } from './modules/property-parties/property-parties.module';
 
 @Module({
   imports: [
@@ -14,7 +16,9 @@ import { UsersModule } from './modules/users/users.module';
     TypeOrmModule.forRoot(databaseConfig()),
 
     AuthModule,
-    UsersModule
+    UsersModule,
+    PropertiesModule,
+    PropertyPartiesModule
   ],
 })
 export class AppModule {}
