@@ -6,6 +6,9 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { PropertiesModule } from './modules/properties/properties.module';
 import { PropertyPartiesModule } from './modules/property-parties/property-parties.module';
+import { LeasesModule } from './modules/leases/leases.module';
+import { InspectionsModule } from './modules/inspections/inspections.module';
+import { InspectionSectionsModule } from './modules/inspection-sections/inspection-sections.module';
 
 @Module({
   imports: [
@@ -18,7 +21,10 @@ import { PropertyPartiesModule } from './modules/property-parties/property-parti
     AuthModule,
     UsersModule,
     PropertiesModule,
-    PropertyPartiesModule
+    PropertyPartiesModule,
+    LeasesModule,
+    InspectionsModule,
+    InspectionSectionsModule
   ],
 })
 export class AppModule {}

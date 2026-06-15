@@ -2,49 +2,40 @@ import {
   Entity,
   Column,
   ManyToOne,
-  OneToMany,
   JoinColumn,
 } from 'typeorm';
 
 import { BaseEntity } from '../../../common/entities/base.entity';
 
 import { Property } from '../../properties/entities/property.entity';
-import { Lease } from '../../leases/entities/lease.entity';
 import { User } from '../../users/entities/user.entity';
-import { InspectionSection } from './inspection-section.entity';
 
-@Entity('inspections')
-export class Inspection extends BaseEntity {
-
+@Entity('leases')
+export class Lease extends BaseEntity {
   @ManyToOne(() => Property)
   @JoinColumn({ name: 'property_id' })
   property!: Property;
 
-  @ManyToOne(() => Lease)
-  @JoinColumn({ name: 'lease_id' })
-  lease!: Lease;
-
   @Column({
-    type: 'timestamp',
+    type: 'date',
   })
-  inspection_date!: Date;
+  start_date!: Date;
 
   @Column({
     type: 'date',
     nullable: true,
   })
-  agreement_start_date?: Date;
+  end_date?: Date;
 
   @Column({
-    type: 'date',
-    nullable: true,
-  })
-  report_return_date?: Date;
-
-  @Column({
-    default: 'draft',
+    default: 'active',
   })
   status!: string;
+
+  @Column({
+    nullable: true,
+  })
+  lease_number?: string;
 
   @Column({
     type: 'text',
@@ -55,10 +46,4 @@ export class Inspection extends BaseEntity {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'created_by' })
   createdBy!: User;
-
-  @OneToMany(
-    () => InspectionSection,
-    section => section.inspection,
-  )
-  sections!: InspectionSection[];
 }
