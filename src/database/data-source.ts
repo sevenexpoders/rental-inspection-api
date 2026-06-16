@@ -23,5 +23,5 @@ ssl: {
   ],
 
   synchronize: false,
-  logging: true,
+  //logging: true,
 });

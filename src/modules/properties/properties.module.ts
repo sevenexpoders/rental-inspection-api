@@ -10,7 +10,6 @@ import { Lease } from './entities/lease.entity';
 import { Inspection } from '../inspections/entities/inspection.entity';
 import { InspectionSection } from '../inspections/entities/inspection-section.entity';
 import { InspectionItem } from '../inspections/entities/inspection-item.entity';
-
 @Module({
     imports: [
         TypeOrmModule.forFeature([

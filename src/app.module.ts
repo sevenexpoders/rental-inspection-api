@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule } from '@nestjs/config'; 
+import { ConfigModule } from '@nestjs/config';
 import { databaseConfig } from './config/database.config';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
@@ -10,6 +10,9 @@ import { LeasesModule } from './modules/leases/leases.module';
 import { InspectionsModule } from './modules/inspections/inspections.module';
 import { InspectionSectionsModule } from './modules/inspection-sections/inspection-sections.module';
 import { LookupModule } from './modules/lookup/lookup.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { AuditLogModule } from './modules/audit-logs/audit-log.module';
 
 @Module({
   imports: [
@@ -26,7 +29,10 @@ import { LookupModule } from './modules/lookup/lookup.module';
     LeasesModule,
     InspectionsModule,
     InspectionSectionsModule,
-    LookupModule
+    LookupModule,
+    AuditLogModule
   ],
+  controllers: [AppController],
+  providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

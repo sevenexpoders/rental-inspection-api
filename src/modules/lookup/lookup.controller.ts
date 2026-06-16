@@ -5,7 +5,7 @@ import { LookupService } from "./lookup.service";
 export class LookupController {
   constructor(
     private readonly lookupService: LookupService,
-  ) {}
+  ) { }
 
   @Get('states')
   getStates() {
@@ -24,5 +24,15 @@ export class LookupController {
   @Get('property-types')
   getPropertyTypes() {
     return this.lookupService.getPropertyTypes();
+  }
+
+  @Get('roles')
+  getRoles() {
+    return this.lookupService.getRoles();
+  }
+
+  @Get('inspection-types')
+  getInspectionTypes() {
+    return this.lookupService.getInspectionTypes();
   }
 }

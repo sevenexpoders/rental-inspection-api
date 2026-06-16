@@ -24,7 +24,7 @@ import { UpdatePropertyDto } from './dto/update-property.dto';
 export class PropertiesController {
   constructor(
     private readonly propertiesService: PropertiesService,
-  ) {}
+  ) { }
 
   @Post()
   create(
@@ -38,10 +38,11 @@ export class PropertiesController {
   }
 
   @Get()
-  findAll(
+  async findAll(
+    @CurrentUser() user: any,
     @Query('search') search?: string,
   ) {
-    return this.propertiesService.findAll(search);
+    return await this.propertiesService.findAll(user.userId, search);
   }
 
   @Get(':id')
@@ -55,17 +56,20 @@ export class PropertiesController {
   update(
     @Param('id') id: string,
     @Body() dto: UpdatePropertyDto,
+    @CurrentUser() user: any,
   ) {
     return this.propertiesService.update(
       id,
       dto,
+      user.userId
     );
   }
 
   @Delete(':id')
   remove(
+    @CurrentUser() user: any,
     @Param('id') id: string,
   ) {
-    return this.propertiesService.remove(id);
+    return this.propertiesService.remove(user.userId, id);
   }
 }

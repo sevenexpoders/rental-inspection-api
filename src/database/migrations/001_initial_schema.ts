@@ -38,6 +38,11 @@ export class InitialSchema001 implements MigrationInterface {
             CREATE TABLE roles (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 name VARCHAR(50) UNIQUE NOT NULL
+
+                description TEXT,
+                status VARCHAR(20) DEFAULT 'active',
+                order_index INTEGER DEFAULT 0,
+                icon_name VARCHAR(100),
             );
         `);
 

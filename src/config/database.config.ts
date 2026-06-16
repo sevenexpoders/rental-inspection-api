@@ -10,8 +10,14 @@ export const databaseConfig = (): TypeOrmModuleOptions => ({
 
   autoLoadEntities: true,
   synchronize: false,
-  logging: true,
+  //logging: true,
   ssl: {
     rejectUnauthorized: false,
+  },
+  extra: {
+    max: 20, // pool size
+    min: 5,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000,
   },
 });

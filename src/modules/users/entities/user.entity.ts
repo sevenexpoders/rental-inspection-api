@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToMany, JoinTable, OneToMany } from 'typeorm';
+import { Entity, Column, ManyToMany, JoinTable, OneToMany, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../../../common/entities/base.entity';
 import { Role } from './role.entity';
 import { RefreshToken } from 'src/modules/auth/entities/refresh-token.entity';
@@ -24,6 +24,15 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', default: 'active' })
   status!: string;
 
+  @Column({
+    type: 'boolean',
+    default: false,
+  })
+  terms_accepted!: boolean;
+
+ @Column({type: 'timestamptz', nullable: true,})
+  terms_accepted_at?: Date | null;
+
   @OneToMany(() => RefreshToken, (t) => t.user)
   refreshTokens!: RefreshToken[];
 
@@ -41,4 +50,12 @@ export class User extends BaseEntity {
     },
   })
   roles!: Role[];
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'updated_by' })
+  updatedBy?: User;
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'deleted_by' })
+  deletedBy?: User;
 }

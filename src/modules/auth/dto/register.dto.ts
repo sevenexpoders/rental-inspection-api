@@ -1,4 +1,4 @@
-import { IsEmail, IsIn, IsString, MinLength } from 'class-validator';
+import { Equals, IsBoolean, IsEmail, IsIn, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
 
 export class RegisterDto {
 
@@ -15,10 +15,15 @@ export class RegisterDto {
   @MinLength(6)
   password!: string;
 
-   @IsIn([
-    'landlord',
-    'property_manager',
-    'technician'
-  ])
-  role!: string;
+  @IsUUID()
+  role_id!: string;
+
+
+  @IsBoolean()
+  @Equals(true, { message: 'You must accept the Terms & Conditions', })
+  terms_accepted!: boolean;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
 }

@@ -4,11 +4,12 @@ import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
-import { Role } from '../roles/entities/role.entity';
+import { Role } from '../lookup/entities/role.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { RegisterDto } from './dto/register.dto';
-import { ApiResponse } from 'src/common/utils/api-response';
+
 import { LoginDto } from './dto/login.dto';
+import { Status } from 'src/common/enum/status';
 
 @Injectable()
 export class AuthService {
@@ -41,26 +42,27 @@ export class AuthService {
 
     const role = await this.roleRepo.findOne({
       where: {
-        name: dto.role,
+        id: dto.role_id,
+        status: Status.ACTIVE
       },
     });
 
     if (!role) {
-      throw new UnauthorizedException(
-        'Invalid role',
-      );
+      throw new UnauthorizedException('Invalid role',);
     }
 
-    const hashedPassword = await bcrypt.hash(
-      dto.password,
-      10,
-    );
+    const hashedPassword = await bcrypt.hash(dto.password, 10,);
 
     const user = this.userRepo.create({
       first_name: dto.first_name,
       last_name: dto.last_name,
       email: dto.email,
       password_hash: hashedPassword,
+      terms_accepted: dto.terms_accepted,
+      terms_accepted_at: dto.terms_accepted
+        ? new Date()
+        : null,
+
       roles: [role],
     });
 
@@ -77,6 +79,22 @@ export class AuthService {
     const user = await this.userRepo.findOne({
       where: {
         email: dto.email,
+        status: Status.ACTIVE,
+      },
+      select: {
+        id: true,
+        first_name: true,
+        last_name: true,
+        email: true,
+        phone: true,
+        password_hash: true,
+        status: true,
+        terms_accepted: true,
+        roles: {
+          id: true,
+          name: true,
+          display_name: true,
+        },
       },
       relations: {
         roles: true,
