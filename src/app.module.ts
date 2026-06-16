@@ -9,6 +9,7 @@ import { PropertyPartiesModule } from './modules/property-parties/property-parti
 import { LeasesModule } from './modules/leases/leases.module';
 import { InspectionsModule } from './modules/inspections/inspections.module';
 import { InspectionSectionsModule } from './modules/inspection-sections/inspection-sections.module';
+import { LookupModule } from './modules/lookup/lookup.module';
 
 @Module({
   imports: [
@@ -24,7 +25,8 @@ import { InspectionSectionsModule } from './modules/inspection-sections/inspecti
     PropertyPartiesModule,
     LeasesModule,
     InspectionsModule,
-    InspectionSectionsModule
+    InspectionSectionsModule,
+    LookupModule
   ],
 })
 export class AppModule {}
