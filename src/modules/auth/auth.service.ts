@@ -1,4 +1,4 @@
-import { ConflictException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -7,10 +7,10 @@ import { User } from '../users/entities/user.entity';
 import { Role } from '../lookup/entities/role.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { RegisterDto } from './dto/register.dto';
-
 import { LoginDto } from './dto/login.dto';
-import { Status } from 'src/common/enum/status';
-
+import { Status } from '../../common/enum/status';
+import { CryptoUtil } from '../../common/utils/crypto.util';
+import * as crypto from 'crypto';
 @Injectable()
 export class AuthService {
   constructor(
@@ -28,16 +28,22 @@ export class AuthService {
 
   // ================= REGISTER =================
   async register(dto: RegisterDto) {
+    const email = dto.email.toLowerCase().trim();
+    if (!email) {
+      throw new BadRequestException('Email is required');
+    }
+    const emailHash = crypto.createHash('sha256').update(email).digest('hex');
+
+    const encryptedEmail = CryptoUtil.encrypt(email);
+    const encryptedPhone = dto.phone ? CryptoUtil.encrypt(dto.phone) : "";
     const existing = await this.userRepo.findOne({
       where: {
-        email: dto.email,
+        email_hash: emailHash,
       },
     });
 
     if (existing) {
-      throw new ConflictException(
-        'Email already exists',
-      );
+      throw new ConflictException('Email already exists',);
     }
 
     const role = await this.roleRepo.findOne({
@@ -56,9 +62,12 @@ export class AuthService {
     const user = this.userRepo.create({
       first_name: dto.first_name,
       last_name: dto.last_name,
-      email: dto.email,
+      email: encryptedEmail,
       password_hash: hashedPassword,
+      email_encrypted: encryptedEmail,
+      email_hash: emailHash,
       terms_accepted: dto.terms_accepted,
+      phone: encryptedPhone,
       terms_accepted_at: dto.terms_accepted
         ? new Date()
         : null,
@@ -76,9 +85,16 @@ export class AuthService {
 
   // ================= LOGIN =================
   async login(dto: LoginDto) {
+    const email = dto.email.toLowerCase().trim();
+
+    if (!email) {
+      throw new BadRequestException('Email is required');
+    }
+    const emailHash = crypto.createHash('sha256').update(email).digest('hex');
+
     const user = await this.userRepo.findOne({
       where: {
-        email: dto.email,
+        email_hash: emailHash,
         status: Status.ACTIVE,
       },
       select: {
@@ -90,6 +106,7 @@ export class AuthService {
         password_hash: true,
         status: true,
         terms_accepted: true,
+        email_encrypted: true,
         roles: {
           id: true,
           name: true,
@@ -117,10 +134,11 @@ export class AuthService {
         'Invalid credentials',
       );
     }
-
+    const decryptedEmail = CryptoUtil.decrypt(user.email_encrypted,);
+    const decryptedPhone = user?.phone ? CryptoUtil.decrypt(user.phone,) : "";
     const payload = {
       sub: user.id,
-      email: user.email,
+      email: decryptedEmail,
       roles: user.roles?.map(
         role => role.name,
       ),
@@ -135,7 +153,7 @@ export class AuthService {
 
     const refreshToken =
       this.jwtService.sign(payload, {
-        expiresIn: '7d',
+        expiresIn: '30d',
       });
 
     await this.refreshTokenRepo.save({
@@ -143,7 +161,7 @@ export class AuthService {
       user,
       expires_at: new Date(
         Date.now() +
-        7 * 24 * 60 * 60 * 1000,
+        30 * 24 * 60 * 60 * 1000,
       ),
     });
 
@@ -156,8 +174,8 @@ export class AuthService {
           id: user.id,
           first_name: user.first_name,
           last_name: user.last_name,
-          email: user.email,
-          phone: user.phone,
+          email: decryptedEmail,
+          phone: decryptedPhone,
           status: user.status,
           role:
             user.roles?.[0]?.name ??
@@ -166,4 +184,77 @@ export class AuthService {
       },
     }
   }
+
+
+
+  async refresh(refreshToken: string,) {
+    const OldPayload = this.jwtService.verify(refreshToken);
+
+    const storedToken =
+      await this.refreshTokenRepo.findOne({
+        where: {
+          token: refreshToken,
+          user: {
+            id: OldPayload.sub,
+            status: Status.ACTIVE
+          },
+        },
+        relations: {
+          user: {
+            roles: true,
+          },
+        },
+      });
+
+    if (!storedToken) {
+      throw new UnauthorizedException('Invalid refresh token',);
+    }
+
+    if (
+      storedToken.expires_at <
+      new Date()
+    ) {
+      throw new UnauthorizedException('Refresh token expired',);
+    }
+
+    const user = storedToken.user;
+
+    const decryptedEmail =
+      CryptoUtil.decrypt(
+        user.email_encrypted,
+      );
+
+    const payload = {
+      sub: user.id,
+      email: decryptedEmail,
+      roles: user.roles.map(
+        r => r.name,
+      ),
+    };
+
+    const accessToken =
+      this.jwtService.sign(payload, {
+        expiresIn: '15m',
+      });
+
+    return {
+      accessToken,
+    };
+  }
+
+  async logout(refreshToken: string,) {
+    const OldPayload = this.jwtService.verify(refreshToken);
+    await this.refreshTokenRepo.delete({
+      token: refreshToken,
+      user: {
+        id: OldPayload.sub,
+        status: Status.ACTIVE
+      },
+    });
+    return {
+      message: 'logout successfully',
+    };
+  }
+
+
 }

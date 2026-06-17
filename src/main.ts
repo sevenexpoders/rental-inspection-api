@@ -24,6 +24,7 @@ async function bootstrap() {
   app.enable('trust proxy');
   app.setGlobalPrefix('api');
 
+
   app.enableCors({
     origin: true,
     credentials: true,

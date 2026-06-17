@@ -17,8 +17,10 @@ import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { Status } from '../../common/enum/status';
 import { AuditLogService } from '../audit-logs/audit-log.service';
-import { AuditAction } from 'src/common/enum/audit-action.enum';
-import { TableName } from 'src/common/enum/table-name.enum';
+import { AuditAction } from '../../common/enum/audit-action.enum';
+import { TableName } from '../../common/enum/table-name.enum';
+import { CryptoUtil } from '../../common/utils/crypto.util';
+import { PropertyHelper } from '../../common/helpers/property.helper';
 
 @Injectable()
 export class PropertiesService {
@@ -30,6 +32,19 @@ export class PropertiesService {
 
   async create(dto: CreatePropertyDto, userId: string) {
     try {
+
+      if (dto.owner_email) {
+        dto.owner_email = CryptoUtil.encrypt(
+          dto.owner_email.toLowerCase().trim(),
+        );
+      }
+
+      if (dto.owner_phone) {
+        dto.owner_phone = CryptoUtil.encrypt(
+          dto.owner_phone.trim(),
+        );
+      }
+
       const property = this.propertyRepo.create({
         ...dto,
         created_by: userId,
@@ -75,25 +90,12 @@ export class PropertiesService {
     }
 
     const result = await qb.getMany();
-    return result;
-    // if (search) {
-    //   return this.propertyRepo.find({
-    //     where: [
-    //       { address: ILike(`%${search}%`) },
-    //       { city: ILike(`%${search}%`) },
-    //       { state: ILike(`%${search}%`) },
-    //       { country: ILike(`%${search}%`) },
-    //     ],
-    //   });
-    // }
-
-
-    // return this.propertyRepo.find();
+   return  result?.map(PropertyHelper.decrypt);
   }
 
   async findOne(id: string) {
     const property = await this.propertyRepo.findOne({
-      where: { id },
+      where: { id, status: Status.ACTIVE },
     });
 
     if (!property) {
@@ -101,8 +103,7 @@ export class PropertiesService {
         'Property not found',
       );
     }
-
-    return property;
+    return PropertyHelper.decrypt(property);
   }
 
   async update(
@@ -112,8 +113,22 @@ export class PropertiesService {
   ) {
     const propertyOld = await this.propertyRepo.findOne({ where: { id } });
 
+    if (!propertyOld) {
+      throw new NotFoundException('Property not found');
+    }
+    if (dto.owner_email) {
+      dto.owner_email = CryptoUtil.encrypt(
+        dto.owner_email.toLowerCase().trim(),
+      );
+    }
+
+    if (dto.owner_phone) {
+      dto.owner_phone = CryptoUtil.encrypt(
+        dto.owner_phone.trim(),
+      );
+    }
     await this.propertyRepo.update(id, dto);
-    const propertyNew = this.findOne(id)
+    const propertyNew = await this.findOne(id)
 
     await this.auditLogService.logAudit(
       userId,

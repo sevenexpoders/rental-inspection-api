@@ -15,6 +15,12 @@ export class User extends BaseEntity {
   @Column({ type: 'varchar', unique: true })
   email!: string;
 
+  @Column({ type: 'varchar', unique: true })
+  email_hash!: string;
+
+  @Column({ type: 'varchar', unique: true })
+  email_encrypted!: string;
+
   @Column({ type: 'varchar', nullable: true })
   phone!: string;
 
