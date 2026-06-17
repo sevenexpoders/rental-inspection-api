@@ -49,10 +49,10 @@ export class Property extends BaseEntity {
   @Column({ type: 'varchar', length: 200, nullable: true })
   owner_name?: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ type: 'text', nullable: true })
   owner_email?: string;
 
-  @Column({ type: 'varchar', length: 20, nullable: true })
+  @Column({ type: 'text', nullable: true })
   owner_phone?: string;
 
   @Column({ type: 'text', nullable: true })
