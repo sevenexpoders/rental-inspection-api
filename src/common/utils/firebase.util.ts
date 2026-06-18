@@ -1,24 +1,23 @@
 import * as admin from 'firebase-admin';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+// import { readFileSync } from 'fs';
+// import { join } from 'path';
 
 export class FirebaseUtil {
     private static initialized = false;
 
     static initialize() {
-        if (this.initialized) {
-            return;
-        }
+         if (this.initialized || admin.apps.length) return;
 
-        const serviceAccount = JSON.parse(
-            readFileSync(
-                join(
-                    process.cwd(),
-                    'firebase-service-account.json',
-                ),
-                'utf8',
-            ),
-        );
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT as string,);
+        // const serviceAccount = JSON.parse(
+        //     readFileSync(
+        //         join(
+        //             process.cwd(),
+        //             'serviceAccountKey.json',
+        //         ),
+        //         'utf8',
+        //     ),
+        // );
 
         admin.initializeApp({
             credential:
