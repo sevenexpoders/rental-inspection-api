@@ -1,4 +1,4 @@
-import { IsEmail, IsString } from 'class-validator';
+import { IsEmail, IsOptional, IsString } from 'class-validator';
 
 export class LoginDto {
 
@@ -7,4 +7,20 @@ export class LoginDto {
 
   @IsString()
   password!: string;
+
+  @IsOptional()
+  @IsString()
+  fcm_token!: string;
+
+  @IsOptional()
+  @IsString()
+  device_id!: string;
+
+  @IsOptional()
+  @IsString()
+  device_name!: string;
+
+  @IsOptional()
+  @IsString()
+  device_type!: string;
 }

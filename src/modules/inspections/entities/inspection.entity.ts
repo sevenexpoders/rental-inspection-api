@@ -1,64 +1,43 @@
+import { BaseEntity } from '../../../common/entities/base.entity';
+import { User } from '../../users/entities/user.entity';
+import { Property } from '../../properties/entities/property.entity';
+
 import {
   Entity,
   Column,
-  ManyToOne,
-  OneToMany,
   JoinColumn,
+  ManyToOne,
 } from 'typeorm';
-
-import { BaseEntity } from '../../../common/entities/base.entity';
-
-import { Property } from '../../properties/entities/property.entity';
-import { Lease } from '../../leases/entities/lease.entity';
-import { User } from '../../users/entities/user.entity';
-import { InspectionSection } from './inspection-section.entity';
 
 @Entity('inspections')
 export class Inspection extends BaseEntity {
 
-  @ManyToOne(() => Property)
+  @Column({ type: 'uuid' })
+  property_id!: string;
+
+  @Column({ type: 'uuid' })
+  user_id!: string;
+
+  @Column({ type: 'varchar', length: 20,  default: 'draft',})
+  status!: string;
+
+  @Column({type: 'timestamp',nullable: true,})
+  completed_at?: Date;
+
+  
+  @Column({ type: 'uuid', nullable: true,})
+  created_by?: string;
+
+  @Column({type: 'uuid',nullable: true, })
+  updated_by?: string;
+
+  @Column({ type: 'uuid',nullable: true,})
+  deleted_by?: string;
+
   @JoinColumn({ name: 'property_id' })
   property!: Property;
 
-  @ManyToOne(() => Lease)
-  @JoinColumn({ name: 'lease_id' })
-  lease!: Lease;
-
-  @Column({
-    type: 'timestamp',
-  })
-  inspection_date!: Date;
-
-  @Column({
-    type: 'date',
-    nullable: true,
-  })
-  agreement_start_date?: Date;
-
-  @Column({
-    type: 'date',
-    nullable: true,
-  })
-  report_return_date?: Date;
-
-  @Column({
-    default: 'draft',
-  })
-  status!: string;
-
-  @Column({
-    type: 'text',
-    nullable: true,
-  })
-  notes?: string;
-
   @ManyToOne(() => User)
-  @JoinColumn({ name: 'created_by' })
-  createdBy!: User;
-
-  @OneToMany(
-    () => InspectionSection,
-    section => section.inspection,
-  )
-  sections!: InspectionSection[];
+  @JoinColumn({ name: 'user_id' })
+  user!: User;
 }

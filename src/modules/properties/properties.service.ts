@@ -90,7 +90,7 @@ export class PropertiesService {
     }
 
     const result = await qb.getMany();
-   return  result?.map(PropertyHelper.decrypt);
+    return result?.map(PropertyHelper.decrypt);
   }
 
   async findOne(id: string) {

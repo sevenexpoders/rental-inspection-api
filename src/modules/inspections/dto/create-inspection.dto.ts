@@ -8,22 +8,22 @@ import {
 export class CreateInspectionDto {
   @IsUUID()
   property_id!: string;
+  items!: SaveInspectionItemDto[];
+}
 
+export class SaveInspectionItemDto {
   @IsUUID()
-  lease_id!: string;
+  inspection_type_id!: string;
 
-  @IsDateString()
-  inspection_date!: Date;
-
-  @IsOptional()
-  @IsDateString()
-  agreement_start_date?: Date;
-
-  @IsOptional()
-  @IsDateString()
-  report_return_date?: Date;
-
-  @IsOptional()
   @IsString()
-  notes?: string;
+  answer!: string;
+
+  @IsString()
+  note!: string;
+  // media?: CreateInspectionMediaDto[];
+}
+
+export class CreateInspectionMediaDto {
+  fileName!: string;
+  fileUrl!: string;
 }

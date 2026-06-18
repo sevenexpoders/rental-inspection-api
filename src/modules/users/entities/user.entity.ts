@@ -1,7 +1,7 @@
 import { Entity, Column, ManyToMany, JoinTable, OneToMany, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../../../common/entities/base.entity';
 import { Role } from './role.entity';
-import { RefreshToken } from 'src/modules/auth/entities/refresh-token.entity';
+import { RefreshToken } from '../../../modules/auth/entities/refresh-token.entity';
 
 @Entity('users')
 export class User extends BaseEntity {

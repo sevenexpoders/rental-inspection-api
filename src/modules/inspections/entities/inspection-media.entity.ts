@@ -1,36 +1,34 @@
 import {
   Entity,
+  PrimaryGeneratedColumn,
   Column,
+  CreateDateColumn,
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
+import { InspectionItem } from './inspection-item.entity';
 
-import { BaseEntity } from '../../../common/entities/base.entity';
-import { Inspection } from './inspection.entity';
-import { User } from '../../users/entities/user.entity';
+@Entity('inspection_item_media')
+export class InspectionItemMedia {
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
 
-@Entity('inspection_media')
-export class InspectionMedia extends BaseEntity {
+  @Column({ type: 'uuid' })
+  inspection_item_id!: string;
 
-  @ManyToOne(() => Inspection, {
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'inspection_id' })
-  inspection!: Inspection;
+  @Column({ type: 'varchar', length: 500, nullable: true, })
+  file_name?: string;
 
-  @Column({ type: 'uuid', nullable: true })
-  section_id!: string;
+  @Column({ type: 'text', nullable: true, })
+  file_url?: string;
 
-  @Column({ type: 'uuid', nullable: true })
-  item_id!: string;
+  @CreateDateColumn()
+  created_at!: Date;
 
-  @Column({ type: 'text' })
-  file_url!: string;
+  @Column({ type: 'uuid', nullable: true, })
+  created_by?: string;
 
-  @Column({ type: 'varchar', default: 'photo' })
-  media_type!: string; // photo | video
-
-  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn({ name: 'uploaded_by' })
-  uploadedBy!: User;
+  @ManyToOne(() => InspectionItem, (inspectionItem) => inspectionItem.media, { onDelete: 'CASCADE', },)
+  @JoinColumn({ name: 'inspection_item_id', })
+  inspectionItem!: InspectionItem;
 }

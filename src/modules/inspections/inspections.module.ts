@@ -1,20 +1,19 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
 import { Inspection } from './entities/inspection.entity';
-
 import { Property } from '../properties/entities/property.entity';
-import { Lease } from '../leases/entities/lease.entity';
-
 import { InspectionsController } from './inspections.controller';
 import { InspectionsService } from './inspections.service';
+import { InspectionItem } from './entities/inspection-item.entity';
+import { InspectionItemMedia } from './entities/inspection-media.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Inspection,
       Property,
-      Lease,
+      InspectionItem,
+      InspectionItemMedia
     ]),
   ],
   controllers: [

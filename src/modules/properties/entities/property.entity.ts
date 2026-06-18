@@ -7,13 +7,12 @@ import {
 } from 'typeorm';
 
 import { BaseEntity } from '../../../common/entities/base.entity';
-import { Lease } from './lease.entity';
 import { PropertyParty } from './property-party.entity';
-import { Inspection } from 'src/modules/inspections/entities/inspection.entity';
-import { PropertyType } from 'src/modules/lookup/entities/property-type.entity';
+import { Inspection } from '../../../modules/inspections/entities/inspection.entity';
+import { PropertyType } from '../../../modules/lookup/entities/property-type.entity';
 import { State } from '../../../modules/lookup/entities/state.entity';
 import { City } from '../../../modules/lookup/entities/city.entity';
-import { Status } from 'src/common/enum/status';
+import { Status } from '../../../common/enum/status';
 
 @Entity('properties')
 export class Property extends BaseEntity {
@@ -73,9 +72,6 @@ export class Property extends BaseEntity {
 
   @Column({ type: 'enum', enum: Status, default: Status.ACTIVE, })
   status!: Status;
-
-  @OneToMany(() => Lease, lease => lease.property)
-  leases!: Lease[];
 
   @OneToMany(() => PropertyParty, party => party.property)
   parties!: PropertyParty[];

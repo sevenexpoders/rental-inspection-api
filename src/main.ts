@@ -3,13 +3,14 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { FirebaseUtil } from './common/utils/firebase.util';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import compression from 'compression';
-
 import helmet from 'helmet';
 
 async function bootstrap() {
   // const app = await NestFactory.create(AppModule);
+  FirebaseUtil.initialize();
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.use(compression());

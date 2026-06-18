@@ -1,37 +1,36 @@
 import {
   Entity,
   Column,
-  ManyToOne,
-  JoinColumn,
+  OneToMany,
 } from 'typeorm';
-
+import { InspectionItemMedia } from './inspection-media.entity';
 import { BaseEntity } from '../../../common/entities/base.entity';
-import { InspectionSection } from './inspection-section.entity';
 
 @Entity('inspection_items')
 export class InspectionItem extends BaseEntity {
 
-  @ManyToOne(() => InspectionSection, section => section.items, {
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({ name: 'section_id' })
-  section!: InspectionSection;
+  @Column({ type: 'uuid' })
+  inspection_id!: string;
 
-  @Column({ type: 'varchar', length: 100 })
-  item_name!: string;
+  @Column({ type: 'uuid' })
+  inspection_type_id!: string;
 
-  @Column({ type: 'boolean', default: false })
-  is_clean!: boolean;
+  @Column({ type: 'varchar', length: 400, nullable: true, })
+  answer?: string;
 
-  @Column({ type: 'boolean', default: false })
-  is_undamaged!: boolean;
+  @Column({ type: 'text', nullable: true, })
+  note?: string;
 
-  @Column({ type: 'boolean', default: false })
-  is_working!: boolean;
 
-  @Column({ type: 'text', nullable: true })
-  agent_comment!: string;
+  @Column({ type: 'uuid', nullable: true, })
+  created_by?: string;
 
-  @Column({ type: 'text', nullable: true })
-  renter_comment!: string;
+  @Column({ type: 'uuid', nullable: true, })
+  updated_by?: string;
+
+  @Column({type: 'uuid',nullable: true,})
+  deleted_by?: string;
+
+  @OneToMany(() => InspectionItemMedia, (media) => media.inspectionItem,)
+  media!: InspectionItemMedia[];
 }

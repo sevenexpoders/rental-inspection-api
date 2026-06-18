@@ -10,10 +10,11 @@ import { RefreshService } from './refresh/refresh.service';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { Role } from '../lookup/entities/role.entity';
+import { UserFcmToken } from './entities/user-fcm-tokens.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([RefreshToken, User, Role]),
+    TypeOrmModule.forFeature([RefreshToken, User, Role, UserFcmToken]),
     JwtModule.register({
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '1d' },
@@ -22,4 +23,4 @@ import { Role } from '../lookup/entities/role.entity';
   controllers: [AuthController, RefreshController],
   providers: [AuthService, RefreshService, JwtStrategy],
 })
-export class AuthModule {}
+export class AuthModule { }

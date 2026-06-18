@@ -10,13 +10,14 @@ import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { CryptoUtil } from '../../common/utils/crypto.util';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
-  ) {}
+  ) { }
 
   // GET PROFILE
   async getProfile(userId: string) {
@@ -27,13 +28,24 @@ export class UsersService {
     if (!user) throw new NotFoundException('User not found');
 
     delete (user as any).password_hash;
-    return user;
+    const decryptedEmail = CryptoUtil.decrypt(user.email_encrypted,);
+    const decryptedPhone = user?.phone ? CryptoUtil.decrypt(user.phone,) : "";
+    return {
+      ...user,
+      email: decryptedEmail,
+      phone: decryptedPhone,
+    };
   }
 
   // UPDATE PROFILE
   async updateProfile(userId: string, dto: UpdateUserDto) {
-    await this.userRepo.update(userId, dto);
-    return this.getProfile(userId);
+    const updateData: any = { ...dto };
+    if (dto.phone) {
+      updateData.phone = CryptoUtil.encrypt(dto.phone);
+    }
+
+    await this.userRepo.update(userId, updateData);
+    return await this.getProfile(userId);
   }
 
   // CHANGE PASSWORD
@@ -62,16 +74,16 @@ export class UsersService {
 
   // GET ALL USERS (ADMIN)
   async findAll() {
-  return this.userRepo.find({
-    select: {
-      id: true,
-      first_name: true,
-      last_name: true,
-      email: true,
-      status: true,
-    },
-  });
-}
+    return this.userRepo.find({
+      select: {
+        id: true,
+        first_name: true,
+        last_name: true,
+        email: true,
+        status: true,
+      },
+    });
+  }
 
   // DELETE USER (SOFT STYLE)
   async deleteUser(userId: string) {

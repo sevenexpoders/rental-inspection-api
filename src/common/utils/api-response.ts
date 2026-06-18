@@ -1,5 +1,3 @@
-// src/common/utils/api-response.ts
-
 export class ApiResponse<T> {
   constructor(
     public success: boolean,
