@@ -16,7 +16,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 export class UsersController {
-  constructor(private usersService: UsersService) {}
+  constructor(private usersService: UsersService) { }
 
   // PROFILE
   @Get('me')
@@ -26,8 +26,8 @@ export class UsersController {
 
   // UPDATE PROFILE
   @Patch('me')
-  updateProfile(@CurrentUser() user: any, @Body() dto: UpdateUserDto) {
-    return this.usersService.updateProfile(user.userId, dto);
+  async updateProfile(@CurrentUser() user: any, @Body() dto: UpdateUserDto) {
+     return await this.usersService.updateProfile(user.userId, dto);
   }
 
   // CHANGE PASSWORD
@@ -43,7 +43,7 @@ export class UsersController {
   }
 
   // DELETE USER
-  @Delete(':id')
+  @Delete('delete')
   deleteUser(@CurrentUser() user: any) {
     return this.usersService.deleteUser(user.userId);
   }

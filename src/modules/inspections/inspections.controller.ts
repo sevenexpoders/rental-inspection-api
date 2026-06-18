@@ -41,6 +41,11 @@ export class InspectionsController {
     );
   }
 
+  @Patch(':inspection_id/complete')
+  async completeInspection(@Param('inspection_id') inspection_id: string, @CurrentUser() user: any,) {
+    return await this.inspectionsService.completeInspection(inspection_id, user.userId);
+  }
+
   @Get()
   findAll() {
     return this.inspectionsService.findAll();

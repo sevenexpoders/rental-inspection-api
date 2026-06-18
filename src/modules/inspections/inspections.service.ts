@@ -16,6 +16,8 @@ import { CreateInspectionDto, SaveInspectionItemDto } from './dto/create-inspect
 import { UpdateInspectionDto } from './dto/update-inspection.dto';
 import { InspectionStatus } from '../../common/enum/inspection-status.enum';
 import { InspectionItem } from './entities/inspection-item.entity';
+import { InspectionType } from '../lookup/entities/inspection_types.entity';
+import { Status } from 'src/common/enum/status';
 
 @Injectable()
 export class InspectionsService {
@@ -28,6 +30,9 @@ export class InspectionsService {
 
     @InjectRepository(InspectionItem)
     private inspectionItemRepo: Repository<InspectionItem>,
+
+    @InjectRepository(InspectionType)
+    private inspectionTypeRepo: Repository<InspectionType>,
 
 
   ) { }
@@ -191,6 +196,22 @@ export class InspectionsService {
           created_by: userId,
         });
       }
+
+      // const totalItems = await this.inspectionItemRepo.count({
+      //   where: {
+      //     inspection_id: inspectionId,
+      //     deleted_at: IsNull(),
+      //   },
+      // });
+      // const expectedItems = await this.inspectionTypeRepo.count({ where: { status: Status.ACTIVE, deleted_at: IsNull() } });
+
+      // if (totalItems >= expectedItems) {
+      //   await this.inspectionRepo.update(inspectionId, {
+      //     status: InspectionStatus.COMPLETED,
+      //     completed_at: new Date(),
+      //     updated_by: userId,
+      //   });
+      // }
       return {
         inspection_item: item
       }
@@ -198,5 +219,62 @@ export class InspectionsService {
       console.log("error==>", error);
       throw error;
     }
+  }
+
+  async completeInspection(inspectionId: string, userId: string) {
+    const inspection = await this.inspectionRepo.findOne({
+      where: {
+        id: inspectionId,
+        user_id: userId,
+        deleted_at: IsNull(),
+      },
+      select: {
+        id: true,
+        status: true,
+      },
+    });
+
+    if (!inspection) {
+      throw new NotFoundException('Inspection not found');
+    }
+
+    if (
+      inspection.status.toLowerCase() ===
+      InspectionStatus.COMPLETED.toLowerCase()
+    ) {
+      throw new BadRequestException('Inspection already completed');
+    }
+
+    // 🔥 Check missing inspection types (BEST LOGIC)
+    const missingItems = await this.inspectionTypeRepo
+      .createQueryBuilder('type')
+      .leftJoin(
+        'inspection_items',
+        'item',
+        'item.inspection_type_id = type.id AND item.inspection_id = :inspectionId',
+        { inspectionId }
+      )
+      .where('type.status = :status', { status: Status.ACTIVE })
+      .andWhere('type.deleted_at IS NULL')
+      .andWhere('item.id IS NULL')
+      .getCount();
+
+    if (missingItems > 0) {
+      throw new BadRequestException(
+        `Please complete all inspection items. Missing: ${missingItems}`
+      );
+    }
+
+    await this.inspectionRepo.update(inspectionId, {
+      status: InspectionStatus.COMPLETED,
+      completed_at: new Date(),
+      updated_by: userId,
+    });
+
+    return {
+      message: 'Inspection completed successfully',
+      inspectionId,
+      status: InspectionStatus.COMPLETED,
+    };
   }
 }

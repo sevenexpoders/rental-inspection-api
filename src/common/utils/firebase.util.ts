@@ -6,13 +6,15 @@ export class FirebaseUtil {
     private static initialized = false;
 
     static initialize() {
-        if (this.initialized || admin.apps.length) return;
+        console.log('Firebase init called');
+        if (this.initialized || admin.apps.length) { console.log('Already initialized'); return };
 
         const envValue = process.env.FIREBASE_SERVICE_ACCOUNT;
 
         if (!envValue) {
             throw new Error('FIREBASE_SERVICE_ACCOUNT is not defined in environment variables');
         }
+        console.log('ENV:', JSON.parse(envValue));
         const serviceAccount = JSON.parse(envValue);
 
         serviceAccount.private_key = serviceAccount.private_key?.replace(/\\n/g, '\n');

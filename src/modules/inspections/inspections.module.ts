@@ -6,6 +6,7 @@ import { InspectionsController } from './inspections.controller';
 import { InspectionsService } from './inspections.service';
 import { InspectionItem } from './entities/inspection-item.entity';
 import { InspectionItemMedia } from './entities/inspection-media.entity';
+import { InspectionType } from '../lookup/entities/inspection_types.entity';
 
 @Module({
   imports: [
@@ -13,7 +14,8 @@ import { InspectionItemMedia } from './entities/inspection-media.entity';
       Inspection,
       Property,
       InspectionItem,
-      InspectionItemMedia
+      InspectionItemMedia,
+      InspectionType
     ]),
   ],
   controllers: [

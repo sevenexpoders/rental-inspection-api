@@ -4,13 +4,14 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 import { User } from './entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CryptoUtil } from '../../common/utils/crypto.util';
+import { Status } from 'src/common/enum/status';
 
 @Injectable()
 export class UsersService {
@@ -22,12 +23,29 @@ export class UsersService {
   // GET PROFILE
   async getProfile(userId: string) {
     const user = await this.userRepo.findOne({
-      where: { id: userId },
+      where: { id: userId, status: Status.ACTIVE, deleted_at: IsNull() },
+      select: {
+        id: true,
+        first_name: true,
+        last_name: true,
+        phone: true,
+        status: true,
+        terms_accepted: true,
+        email_encrypted: true,
+        roles: {
+          id: true,
+          name: true,
+          display_name: true,
+        },
+      },
+      relations: {
+        roles: true,
+      },
     });
 
     if (!user) throw new NotFoundException('User not found');
 
-    delete (user as any).password_hash;
+    // delete (user as any).password_hash;
     const decryptedEmail = CryptoUtil.decrypt(user.email_encrypted,);
     const decryptedPhone = user?.phone ? CryptoUtil.decrypt(user.phone,) : "";
     return {
@@ -39,19 +57,25 @@ export class UsersService {
 
   // UPDATE PROFILE
   async updateProfile(userId: string, dto: UpdateUserDto) {
-    const updateData: any = { ...dto };
-    if (dto.phone) {
-      updateData.phone = CryptoUtil.encrypt(dto.phone);
+    try {
+      const updateData: any = { ...dto };
+      if (dto.phone) {
+        updateData.phone = CryptoUtil.encrypt(dto.phone);
+      }
+
+      await this.userRepo.update(userId, updateData);
+      return await this.getProfile(userId);
+    } catch (error) {
+      console.log("error==>", error);
+      throw error;
     }
 
-    await this.userRepo.update(userId, updateData);
-    return await this.getProfile(userId);
   }
 
   // CHANGE PASSWORD
   async changePassword(userId: string, dto: ChangePasswordDto) {
     const user = await this.userRepo.findOne({
-      where: { id: userId },
+      where: { id: userId, status: Status.ACTIVE, deleted_at: IsNull() },
     });
 
     if (!user) throw new NotFoundException('User not found');
@@ -75,6 +99,7 @@ export class UsersService {
   // GET ALL USERS (ADMIN)
   async findAll() {
     return this.userRepo.find({
+      where: { status: Status.ACTIVE, deleted_at: IsNull() },
       select: {
         id: true,
         first_name: true,
@@ -88,7 +113,7 @@ export class UsersService {
   // DELETE USER (SOFT STYLE)
   async deleteUser(userId: string) {
     await this.userRepo.update(userId, {
-      status: 'deleted',
+      status: Status.DELETED,
     });
 
     return { message: 'User deleted' };

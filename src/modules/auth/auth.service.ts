@@ -1,8 +1,8 @@
-import { BadRequestException, ConflictException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpStatus, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { Role } from '../lookup/entities/role.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
@@ -14,6 +14,9 @@ import * as crypto from 'crypto';
 import { UserFcmToken } from './entities/user-fcm-tokens.entity';
 import { FirebaseUtil } from '../../common/utils/firebase.util';
 import { NotificationsService } from '../notifications/notifications.service';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { OtpUtil } from '../../common/utils/otp.util';
 @Injectable()
 export class AuthService {
   constructor(
@@ -28,9 +31,6 @@ export class AuthService {
 
     @InjectRepository(UserFcmToken)
     private userFcmTokenRepo: Repository<UserFcmToken>,
-
-    @InjectRepository(UserFcmToken)
-    private notificationRepo: Repository<UserFcmToken>,
 
     private jwtService: JwtService,
     private readonly notificationsService: NotificationsService,
@@ -330,5 +330,74 @@ export class AuthService {
     };
   }
 
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const user = await this.userRepo.findOne({
+      where: { email: dto.email, status: Status.ACTIVE, deleted_at: IsNull() },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // generate OTP
+    const otp = OtpUtil.generateOtp();
+
+    // save OTP (you should have table or cache)
+    // await this.otpRepo.save({
+    //   user_id: user.id,
+    //   otp,
+    //   expires_at: new Date(Date.now() + 10 * 60 * 1000), // 10 min
+    // });
+
+    // send email / notification
+    // await this.emailService.sendEmail(
+    //   user.email,
+    //   'Reset Password OTP',
+    //   `Your OTP is ${otp}`
+    // );
+
+    return {
+      message: 'OTP sent successfully',
+    };
+  }
+
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const user = await this.userRepo.findOne({
+      where: { email: dto.email, status: Status.ACTIVE, deleted_at: IsNull() },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // const otpRecord = await this.otpRepo.findOne({
+    //   where: {
+    //     user_id: user.id,
+    //     otp: dto.otp,
+    //   },
+    // });
+
+    // if (!otpRecord) {
+    //   throw new BadRequestException('Invalid OTP');
+    // }
+
+    // if (otpRecord.expires_at < new Date()) {
+    //   throw new BadRequestException('OTP expired');
+    // }
+
+    // const hashedPassword = await bcrypt.hash(dto.new_password, 10);
+
+    // await this.userRepo.update(user.id, {
+    //   password_hash: hashedPassword,
+    // });
+
+    // delete OTP after use
+    //await this.otpRepo.delete({ id: otpRecord.id });
+
+    return {
+      message: 'Password reset successful',
+    };
+  }
 
 }
