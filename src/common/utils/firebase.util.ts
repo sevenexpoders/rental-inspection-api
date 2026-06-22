@@ -14,7 +14,7 @@ export class FirebaseUtil {
         if (!envValue) {
             throw new Error('FIREBASE_SERVICE_ACCOUNT is not defined in environment variables');
         }
-        console.log('ENV:', JSON.parse(envValue));
+        // console.log('ENV:', JSON.parse(envValue));
         const serviceAccount = JSON.parse(envValue);
 
         serviceAccount.private_key = serviceAccount.private_key?.replace(/\\n/g, '\n');

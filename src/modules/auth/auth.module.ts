@@ -11,10 +11,11 @@ import { RefreshToken } from './entities/refresh-token.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { Role } from '../lookup/entities/role.entity';
 import { UserFcmToken } from './entities/user-fcm-tokens.entity';
+import { UserOtp } from './entities/user-otp.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([RefreshToken, User, Role, UserFcmToken]),
+    TypeOrmModule.forFeature([RefreshToken, User, Role, UserFcmToken, UserOtp]),
     JwtModule.register({
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '1d' },

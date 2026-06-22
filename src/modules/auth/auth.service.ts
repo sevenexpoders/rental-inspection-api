@@ -1,22 +1,23 @@
-import { BadRequestException, ConflictException, HttpStatus, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { Role } from '../lookup/entities/role.entity';
-import { RefreshToken } from './entities/refresh-token.entity';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
-import { Status } from '../../common/enum/status';
-import { CryptoUtil } from '../../common/utils/crypto.util';
-import * as crypto from 'crypto';
-import { UserFcmToken } from './entities/user-fcm-tokens.entity';
-import { FirebaseUtil } from '../../common/utils/firebase.util';
+import { RefreshToken , UserOtp,UserFcmToken} from './entities';
+import { OtpType, Status } from '../../common/enum';
+import { ForgotPasswordDto, ResetPasswordDto,LoginDto,RegisterDto } from './dto';
 import { NotificationsService } from '../notifications/notifications.service';
-import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { ResetPasswordDto } from './dto/reset-password.dto';
-import { OtpUtil } from '../../common/utils/otp.util';
+
+
+import {
+  HashUtil,
+  OtpUtil,
+  CryptoUtil,
+  PasswordUtil,
+  FirebaseUtil,
+} from '../../common/utils';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -32,8 +33,13 @@ export class AuthService {
     @InjectRepository(UserFcmToken)
     private userFcmTokenRepo: Repository<UserFcmToken>,
 
+    @InjectRepository(UserOtp)
+    private readonly otpRepo: Repository<UserOtp>,
+
     private jwtService: JwtService,
     private readonly notificationsService: NotificationsService,
+
+
   ) { }
 
   // ================= REGISTER =================
@@ -42,7 +48,7 @@ export class AuthService {
     if (!email) {
       throw new BadRequestException('Email is required');
     }
-    const emailHash = crypto.createHash('sha256').update(email).digest('hex');
+    const emailHash = HashUtil.sha256(dto.email);
 
     const encryptedEmail = CryptoUtil.encrypt(email);
     const encryptedPhone = dto.phone ? CryptoUtil.encrypt(dto.phone) : "";
@@ -67,7 +73,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid role',);
     }
 
-    const hashedPassword = await bcrypt.hash(dto.password, 10,);
+    const hashedPassword = await PasswordUtil.hash(dto.password);
 
     const user = this.userRepo.create({
       first_name: dto.first_name,
@@ -103,7 +109,7 @@ export class AuthService {
       if (!email) {
         throw new BadRequestException('Email is required');
       }
-      const emailHash = crypto.createHash('sha256').update(email).digest('hex');
+      const emailHash = HashUtil.sha256(dto.email);
 
       const user = await this.userRepo.findOne({
         where: {
@@ -136,11 +142,8 @@ export class AuthService {
           'Invalid credentials',
         );
       }
-
-      const isMatch = await bcrypt.compare(
-        dto.password,
-        user.password_hash,
-      );
+      
+      const isMatch = await PasswordUtil.compare(dto.password, user.password_hash,);
 
       if (!isMatch) {
         throw new UnauthorizedException(
@@ -331,8 +334,16 @@ export class AuthService {
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {
+
+    const email = dto.email.toLowerCase().trim();
+
+    if (!email) {
+      throw new BadRequestException('Email is required');
+    }
+    const emailHash = HashUtil.sha256(dto.email);
+
     const user = await this.userRepo.findOne({
-      where: { email: dto.email, status: Status.ACTIVE, deleted_at: IsNull() },
+      where: { email_hash: emailHash, status: Status.ACTIVE, deleted_at: IsNull() },
     });
 
     if (!user) {
@@ -342,12 +353,12 @@ export class AuthService {
     // generate OTP
     const otp = OtpUtil.generateOtp();
 
-    // save OTP (you should have table or cache)
-    // await this.otpRepo.save({
-    //   user_id: user.id,
-    //   otp,
-    //   expires_at: new Date(Date.now() + 10 * 60 * 1000), // 10 min
-    // });
+    await this.otpRepo.save({
+      user_id: user.id,
+      otp,
+      type: OtpType.FORGOT_PASSWORD,
+      expires_at: new Date(Date.now() + 10 * 60 * 1000), // 10 min
+    });
 
     // send email / notification
     // await this.emailService.sendEmail(
@@ -358,42 +369,44 @@ export class AuthService {
 
     return {
       message: 'OTP sent successfully',
+      otp: otp,
     };
   }
 
 
   async resetPassword(dto: ResetPasswordDto) {
-    const user = await this.userRepo.findOne({
-      where: { email: dto.email, status: Status.ACTIVE, deleted_at: IsNull() },
-    });
+
+    const email = dto.email.toLowerCase().trim();
+    if (!email) {
+      throw new BadRequestException('Email is required');
+    }
+    const emailHash = HashUtil.sha256(dto.email);
+
+    const user = await this.userRepo.findOne({ where: { email_hash: emailHash, status: Status.ACTIVE, deleted_at: IsNull() }, });
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    // const otpRecord = await this.otpRepo.findOne({
-    //   where: {
-    //     user_id: user.id,
-    //     otp: dto.otp,
-    //   },
-    // });
+    const otpRecord = await this.otpRepo.findOne({
+      where: {
+        user_id: user.id,
+        otp: dto.otp,
+      },
+    });
 
-    // if (!otpRecord) {
-    //   throw new BadRequestException('Invalid OTP');
-    // }
+    if (!otpRecord) {
+      throw new BadRequestException('Invalid OTP');
+    }
 
-    // if (otpRecord.expires_at < new Date()) {
-    //   throw new BadRequestException('OTP expired');
-    // }
+    if (otpRecord.expires_at < new Date()) {
+      throw new BadRequestException('OTP expired');
+    }
 
-    // const hashedPassword = await bcrypt.hash(dto.new_password, 10);
 
-    // await this.userRepo.update(user.id, {
-    //   password_hash: hashedPassword,
-    // });
-
-    // delete OTP after use
-    //await this.otpRepo.delete({ id: otpRecord.id });
+    const hashedPassword = await PasswordUtil.hash(dto.new_password);
+    await this.userRepo.update(user.id, { password_hash: hashedPassword, });
+    await this.otpRepo.delete({ id: otpRecord.id });
 
     return {
       message: 'Password reset successful',
