@@ -11,13 +11,10 @@ import {
 } from '@nestjs/common';
 
 import { PropertiesService } from './properties.service';
-
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
-import { CreatePropertyDto } from './dto/create-property.dto';
-import { UpdatePropertyDto } from './dto/update-property.dto';
+import { CreatePropertyDto, UpdatePropertyDto } from './dto';
 
 @Controller('properties')
 @UseGuards(JwtAuthGuard)
@@ -40,9 +37,13 @@ export class PropertiesController {
   @Get()
   async findAll(
     @CurrentUser() user: any,
+    @Query('page') page = 1,
+    @Query('limit') limit = 10,
     @Query('search') search?: string,
+
   ) {
-    return await this.propertiesService.findAll(user.userId, search);
+    return await this.propertiesService.findAll(user.userId, search, Number(page),
+      Number(limit),);
   }
 
   @Get(':id')

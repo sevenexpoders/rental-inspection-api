@@ -27,7 +27,7 @@ export class UsersController {
   // UPDATE PROFILE
   @Patch('me')
   async updateProfile(@CurrentUser() user: any, @Body() dto: UpdateUserDto) {
-     return await this.usersService.updateProfile(user.userId, dto);
+    return await this.usersService.updateProfile(user.userId, dto);
   }
 
   // CHANGE PASSWORD
@@ -46,5 +46,15 @@ export class UsersController {
   @Delete('delete')
   deleteUser(@CurrentUser() user: any) {
     return this.usersService.deleteUser(user.userId);
+  }
+
+  @Get('dashboard')
+  async getDashboard(@CurrentUser() user: any) {
+    return await this.usersService.getDashboard(user.userId);
+  }
+
+  @Get('reports/summary')
+  async getReportsSummary(@CurrentUser() user: any) {
+    return await this.usersService.getReportsSummary(user.userId);
   }
 }

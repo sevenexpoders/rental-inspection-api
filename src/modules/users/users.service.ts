@@ -7,17 +7,32 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
-import { User } from './entities/user.entity';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { ChangePasswordDto } from './dto/change-password.dto';
+
+import { UpdateUserDto, ChangePasswordDto } from './dto';
 import { CryptoUtil } from '../../common/utils/crypto.util';
-import { Status } from 'src/common/enum/status';
+
+import { Property } from '../properties/entities';
+import { Inspection, InspectionItem } from '../inspections/entities';
+
+import { User } from './entities/user.entity';
+import { InspectionStatus, Status } from '../../common/enum';
+
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
+
+    @InjectRepository(Property)
+    private propertyRepo: Repository<Property>,
+
+    @InjectRepository(Inspection)
+    private inspectionRepo: Repository<Inspection>,
+
+    @InjectRepository(InspectionItem)
+    private inspectionItemRepo: Repository<InspectionItem>,
+
   ) { }
 
   // GET PROFILE
@@ -48,10 +63,93 @@ export class UsersService {
     // delete (user as any).password_hash;
     const decryptedEmail = CryptoUtil.decrypt(user.email_encrypted,);
     const decryptedPhone = user?.phone ? CryptoUtil.decrypt(user.phone,) : "";
+
+    const totalProperties = await this.propertyRepo.count({
+      where: {
+        user_id: userId,
+        deleted_at: IsNull(),
+      },
+    });
+
+    const completedInspections = await this.inspectionRepo
+      .createQueryBuilder('inspection')
+      .innerJoin('properties', 'property', 'property.id = inspection.property_id')
+      .where('property.user_id = :userId', { userId })
+      .andWhere('property.deleted_at IS NULL')
+      .andWhere('inspection.deleted_at IS NULL')
+      .andWhere('inspection.status = :status', {
+        status: InspectionStatus.COMPLETED,
+      })
+      .getCount();
+
+    const inProgressInspections = await this.propertyRepo
+      .createQueryBuilder('property')
+      .leftJoin(
+        'inspections',
+        'inspection',
+        'inspection.property_id = property.id AND inspection.deleted_at IS NULL',
+      )
+      .where('property.user_id = :userId', { userId })
+      .andWhere('property.deleted_at IS NULL')
+      .andWhere('inspection.id IS NULL')
+      .getCount();
+
+
+    const draftInspections = await this.inspectionRepo
+      .createQueryBuilder('inspection')
+      .innerJoin(
+        'properties',
+        'property',
+        'property.id = inspection.property_id',
+      )
+      .where('property.user_id = :userId', { userId })
+      .andWhere('property.deleted_at IS NULL')
+      .andWhere('inspection.deleted_at IS NULL')
+      .andWhere('inspection.status = :status', {
+        status: InspectionStatus.DRAFT,
+      })
+      .getCount();
+
+    const result = await this.inspectionItemRepo
+      .createQueryBuilder('item')
+      .innerJoin(
+        Inspection,
+        'inspection',
+        'inspection.id = item.inspection_id',
+      )
+      .innerJoin(
+        Property,
+        'property',
+        'property.id = inspection.property_id',
+      )
+      .where('property.user_id = :userId', { userId })
+      .andWhere('property.deleted_at IS NULL')
+      .andWhere('inspection.deleted_at IS NULL')
+      .andWhere('item.deleted_at IS NULL')
+      .select([
+        `COUNT(CASE WHEN LOWER(item.answer) = 'yes' THEN 1 END) as pass`,
+        `COUNT(CASE WHEN LOWER(item.answer) = 'no' THEN 1 END) as fail`,
+      ])
+      .getRawOne();
+
+    const pass = Number(result.pass ?? 0);
+    const fail = Number(result.fail ?? 0);
+
+    const compliancePercentage =
+      pass + fail > 0
+        ? Math.round((pass / (pass + fail)) * 100)
+        : 0;
     return {
       ...user,
       email: decryptedEmail,
+      email_encrypted: decryptedEmail,
       phone: decryptedPhone,
+      total_properties: totalProperties,
+      completed_inspections: completedInspections,
+      draft_inspections: draftInspections,
+      compliance_percentage: compliancePercentage,
+      in_progress_inspections: inProgressInspections
+
     };
   }
 
@@ -118,4 +216,240 @@ export class UsersService {
 
     return { message: 'User deleted' };
   }
+
+  async getDashboard(userId: string) {
+
+    const totalProperties = await this.propertyRepo.count({
+      where: {
+        user_id: userId,
+        deleted_at: IsNull(),
+      },
+    });
+
+    const pendingInspections = await this.inspectionRepo
+      .createQueryBuilder('inspection')
+      .innerJoin(
+        'properties',
+        'property',
+        'property.id = inspection.property_id',
+      )
+      .where('property.user_id = :userId', { userId })
+      .andWhere('property.deleted_at IS NULL')
+      .andWhere('inspection.deleted_at IS NULL')
+      .andWhere('inspection.status = :status', {
+        status: InspectionStatus.DRAFT,
+      })
+      .getCount();
+
+    const completedInspections = await this.inspectionRepo
+      .createQueryBuilder('inspection')
+      .innerJoin('properties', 'property', 'property.id = inspection.property_id')
+      .where('property.user_id = :userId', { userId })
+      .andWhere('property.deleted_at IS NULL')
+      .andWhere('inspection.deleted_at IS NULL')
+      .andWhere('inspection.status = :status', {
+        status: InspectionStatus.COMPLETED,
+      })
+      .getCount();
+
+    const totalInspections = await this.inspectionRepo
+      .createQueryBuilder('inspection')
+      .innerJoin('properties', 'property', 'property.id = inspection.property_id')
+      .where('property.user_id = :userId', { userId })
+      .andWhere('property.deleted_at IS NULL')
+      .andWhere('inspection.deleted_at IS NULL')
+      .getCount();
+
+    const inProgressInspections = await this.propertyRepo
+      .createQueryBuilder('property')
+      .leftJoin(
+        'inspections',
+        'inspection',
+        'inspection.property_id = property.id AND inspection.deleted_at IS NULL',
+      )
+      .where('property.user_id = :userId', { userId })
+      .andWhere('property.deleted_at IS NULL')
+      .andWhere('inspection.id IS NULL')
+      .getCount();
+
+
+    // const compliancePercentage =
+    //   totalInspections > 0
+    //     ? Math.round((completedInspections / (totalInspections + inProgressInspections)) * 100)
+    //     : 0;
+
+    //  const compliancePercentage =
+    //   totalInspections > 0
+    //     ? Math.round((completedInspections / totalInspections ) * 100)
+    //     : 0;
+
+    const result = await this.inspectionItemRepo
+      .createQueryBuilder('item')
+      .innerJoin(
+        Inspection,
+        'inspection',
+        'inspection.id = item.inspection_id',
+      )
+      .innerJoin(
+        Property,
+        'property',
+        'property.id = inspection.property_id',
+      )
+      .where('property.user_id = :userId', { userId })
+      .andWhere('property.deleted_at IS NULL')
+      .andWhere('inspection.deleted_at IS NULL')
+      .andWhere('item.deleted_at IS NULL')
+      .select([
+        `COUNT(CASE WHEN LOWER(item.answer) = 'yes' THEN 1 END) as pass`,
+        `COUNT(CASE WHEN LOWER(item.answer) = 'no' THEN 1 END) as fail`,
+      ])
+      .getRawOne();
+
+    const pass = Number(result.pass ?? 0);
+    const fail = Number(result.fail ?? 0);
+
+    const compliancePercentage =
+      pass + fail > 0
+        ? Math.round((pass / (pass + fail)) * 100)
+        : 0;
+
+
+    return {
+      overview: {
+        totalProperties,
+        totalInspections,
+        completedInspections,
+        inProgressInspections,
+        draftInspections: pendingInspections,
+        compliancePercentage,
+      }
+    };
+  }
+
+
+  async getReportsSummary(userId: string) {
+    const inspections = await this.inspectionRepo.find({
+      where: {
+        user_id: userId,
+        status: InspectionStatus.COMPLETED,
+        deleted_at: IsNull(),
+      },
+      relations: {
+        property: {
+          city: true,
+          state: true,
+          propertyType: true,
+        },
+        items: {
+          media: true,
+          inspectionType: true,
+        },
+      },
+      order: {
+        completed_at: 'DESC',
+      },
+    });
+
+    const reports = inspections.map((inspection) => {
+      const items = inspection.items ?? [];
+
+      const passCount = items.filter(
+        (item) => String(item.answer).toLowerCase() === 'yes',
+      ).length;
+
+      const failCount = items.filter(
+        (item) => String(item.answer).toLowerCase() === 'no',
+      ).length;
+
+      const score =
+        passCount + failCount > 0
+          ? Math.round((passCount / (passCount + failCount)) * 100)
+          : 0;
+
+      return {
+        inspectionId: inspection.id,
+        status: inspection.status,
+        completedAt: inspection.completed_at,
+
+        property: {
+          id: inspection.property.id,
+          address: inspection.property.address,
+          postalCode: inspection.property.postal_code,
+          country: inspection.property.country,
+          houseUnitNo: inspection.property.house_unit_no,
+          beds: inspection.property.beds,
+          baths: inspection.property.baths,
+          ownerName: inspection.property.owner_name,
+          ownerEmail: inspection.property.owner_email
+            ? CryptoUtil.decrypt(inspection.property.owner_email)
+            : null,
+          ownerPhone: inspection.property.owner_phone
+            ? CryptoUtil.decrypt(inspection.property.owner_phone)
+            : null,
+          city: inspection.property.city,
+          state: inspection.property.state,
+          propertyType: inspection.property.propertyType,
+        },
+
+        summary: {
+          pass: passCount,
+          fail: failCount,
+          score,
+        },
+
+        items: items
+          .sort(
+            (a, b) =>
+              (a.inspectionType?.order_index ?? 0) -
+              (b.inspectionType?.order_index ?? 0),
+          )
+          .map((item) => ({
+            id: item.id,
+            inspectionId: item.inspection_id,
+            inspectionTypeId: item.inspection_type_id,
+
+            title: item.inspectionType?.title,
+            subtitle: item.inspectionType?.subtitle,
+            image: item.inspectionType?.image,
+            inputType: item.inspectionType?.input_type,
+            orderIndex: item.inspectionType?.order_index,
+
+            answer: item.answer,
+            note: item.note,
+
+            media: (item.media ?? []).map((media) => ({
+              id: media.id,
+              fileName: media.file_name,
+              fileUrl: media.file_url,
+              createdAt: media.created_at,
+              createdBy: media.created_by,
+            })),
+          })),
+      };
+    });
+
+    const totalPass = reports.reduce(
+      (sum, report) => sum + report.summary.pass,
+      0,
+    );
+
+    const totalFail = reports.reduce(
+      (sum, report) => sum + report.summary.fail,
+      0,
+    );
+
+    const overallScore =
+      totalPass + totalFail > 0
+        ? Math.round((totalPass / (totalPass + totalFail)) * 100)
+        : 0;
+
+    return {
+      reports: reports.length,
+      pass: totalPass,
+      fail: totalFail,
+      score: overallScore,
+      availableReports: reports,
+    };
+  }
+
 }

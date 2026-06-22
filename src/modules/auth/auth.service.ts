@@ -2,12 +2,12 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException, 
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
-import { User } from '../users/entities/user.entity';
-import { Role } from '../lookup/entities/role.entity';
-import { RefreshToken , UserOtp,UserFcmToken} from './entities';
-import { OtpType, Status } from '../../common/enum';
-import { ForgotPasswordDto, ResetPasswordDto,LoginDto,RegisterDto } from './dto';
 import { NotificationsService } from '../notifications/notifications.service';
+import { RefreshToken , UserOtp,UserFcmToken} from './entities';
+import { User } from '../users/entities';
+import { Role } from '../lookup/entities';
+import { ForgotPasswordDto, ResetPasswordDto,LoginDto,RegisterDto } from './dto';
+import { OtpType, Status } from '../../common/enum';
 
 
 import {

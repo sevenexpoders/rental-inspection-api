@@ -5,23 +5,18 @@ import {
 
 import {
   Repository,
-  ILike,
   Brackets
 } from 'typeorm';
 
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { Property } from './entities/property.entity';
-
-import { CreatePropertyDto } from './dto/create-property.dto';
-import { UpdatePropertyDto } from './dto/update-property.dto';
-import { Status } from '../../common/enum/status';
+import { Property } from './entities';
+import { CreatePropertyDto, UpdatePropertyDto } from './dto';
+import { Status, TableName, InspectionStatus, AuditAction } from '../../common/enum';
 import { AuditLogService } from '../audit-logs/audit-log.service';
-import { AuditAction } from '../../common/enum/audit-action.enum';
-import { TableName } from '../../common/enum/table-name.enum';
-import { CryptoUtil } from '../../common/utils/crypto.util';
+import { CryptoUtil } from '../../common/utils';
 import { PropertyHelper } from '../../common/helpers/property.helper';
-import { InspectionStatus } from 'src/common/enum/inspection-status.enum';
+
 
 @Injectable()
 export class PropertiesService {
@@ -69,55 +64,123 @@ export class PropertiesService {
     }
   }
 
-  async findAll(userId: string, search?: string) {
-    try {
+  // async findAll(userId: string, search?: string, page = 1,
+  //   limit = 10,) {
+  //   try {
+  //     const qb = this.propertyRepo.createQueryBuilder('property');
 
+  //     qb.leftJoinAndSelect('property.city', 'city')
+  //       .leftJoinAndSelect('property.state', 'state')
+  //       .leftJoinAndSelect('property.propertyType', 'propertyType')
+  //       .leftJoin(
+  //         (subQuery) => {
+  //           return subQuery
+  //             .select('i.property_id', 'property_id')
+  //             .addSelect('i.status', 'status')
+  //             .addSelect(
+  //               'ROW_NUMBER() OVER (PARTITION BY i.property_id ORDER BY i.created_at DESC)',
+  //               'rn',
+  //             )
+  //             .from('inspections', 'i')
+  //             .where('i.deleted_at IS NULL');
+  //         },
+  //         'inspection',
+  //         'inspection.property_id = property.id AND inspection.rn = 1',
+  //       )
+  //       .addSelect('inspection.status', 'inspection_status');
 
-      const qb = this.propertyRepo.createQueryBuilder('property');
+  //     qb.where('property.user_id = :userId', { userId });
 
-      qb.leftJoinAndSelect('property.city', 'city')
-        .leftJoinAndSelect('property.state', 'state')
-        .leftJoinAndSelect('property.propertyType', 'propertyType')
-        .leftJoin(
-          (subQuery) => {
-            return subQuery
-              .select('i.property_id', 'property_id')
-              .addSelect('i.status', 'status')
-              .addSelect(
-                'ROW_NUMBER() OVER (PARTITION BY i.property_id ORDER BY i.created_at DESC)',
-                'rn',
-              )
-              .from('inspections', 'i')
-              .where('i.deleted_at IS NULL');
-          },
-          'inspection',
-          'inspection.property_id = property.id AND inspection.rn = 1',
-        )
-        .addSelect('inspection.status', 'inspection_status');
+  //     if (search) {
+  //       qb.andWhere(
+  //         new Brackets((qb) => {
+  //           qb.where('property.address ILIKE :search', { search: `%${search}%` })
+  //             .orWhere('property.city ILIKE :search', { search: `%${search}%` })
+  //             .orWhere('property.state ILIKE :search', { search: `%${search}%` })
+  //             .orWhere('property.country ILIKE :search', { search: `%${search}%` });
+  //         }),
+  //       );
+  //     }
 
-      qb.where('property.user_id = :userId', { userId });
+  //     const { entities, raw } = await qb.getRawAndEntities();
+  //     return entities.map((property, index) => ({
+  //       ...PropertyHelper.decrypt(property),
+  //       inspection_status: raw[index]?.inspection_status ?? InspectionStatus.IN_PROGRESS,
 
-      if (search) {
-        qb.andWhere(
-          new Brackets((qb) => {
-            qb.where('property.address ILIKE :search', { search: `%${search}%` })
-              .orWhere('property.city ILIKE :search', { search: `%${search}%` })
-              .orWhere('property.state ILIKE :search', { search: `%${search}%` })
-              .orWhere('property.country ILIKE :search', { search: `%${search}%` });
-          }),
-        );
-      }
-      
-      const { entities, raw } = await qb.getRawAndEntities();
-      return entities.map((property, index) => ({
-        ...PropertyHelper.decrypt(property),
-        inspection_status: raw[index]?.inspection_status ?? InspectionStatus.IN_PROGRESS,
+  //     }));
+  //   } catch (error) {
+  //     console.log("error==>", error);
+  //     throw error;
+  //   }
+  // }
 
-      }));
-    } catch (error) {
-      console.log("error==>", error);
-      throw error;
+  async findAll(
+    userId: string,
+    search?: string,
+    page = 1,
+    limit = 10,
+  ) {
+    const qb = this.propertyRepo.createQueryBuilder('property');
+
+    qb.leftJoinAndSelect('property.city', 'city')
+      .leftJoinAndSelect('property.state', 'state')
+      .leftJoinAndSelect('property.propertyType', 'propertyType')
+      .leftJoin(
+        (subQuery) => {
+          return subQuery
+            .select('i.property_id', 'property_id')
+            .addSelect('i.status', 'status')
+            .addSelect(
+              'ROW_NUMBER() OVER (PARTITION BY i.property_id ORDER BY i.created_at DESC)',
+              'rn',
+            )
+            .from('inspections', 'i')
+            .where('i.deleted_at IS NULL');
+        },
+        'inspection',
+        'inspection.property_id = property.id AND inspection.rn = 1',
+      )
+      .addSelect('inspection.status', 'inspection_status');
+
+    qb.where('property.user_id = :userId', { userId })
+      .andWhere('property.deleted_at IS NULL');
+
+    if (search) {
+      qb.andWhere(
+        new Brackets((qb) => {
+          qb.where('property.address ILIKE :search', {
+            search: `%${search}%`,
+          }).orWhere('property.country ILIKE :search', {
+            search: `%${search}%`,
+          });
+        }),
+      );
     }
+    const total = await qb.getCount();
+
+    qb.orderBy('property.created_at', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    const { entities, raw } = await qb.getRawAndEntities();
+
+    const properties = entities.map((property, index) => ({
+      ...PropertyHelper.decrypt(property),
+      inspection_status:
+        raw[index]?.inspection_status ??
+        InspectionStatus.IN_PROGRESS,
+    }));
+    return {
+      properties,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        hasNextPage: page * limit < total,
+        hasPreviousPage: page > 1,
+      },
+    };
   }
 
   async findOne(id: string) {

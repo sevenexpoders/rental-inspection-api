@@ -2,8 +2,9 @@ import {
   IsUUID,
   IsEnum,
 } from 'class-validator';
+import { PropertyPartyRole } from '../../../common/enum';
 
-import { PropertyPartyRole } from '../enums/property-party-role.enum';
+
 
 export class CreatePropertyPartyDto {
   @IsUUID()

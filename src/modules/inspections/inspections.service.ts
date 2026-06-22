@@ -17,7 +17,8 @@ import { UpdateInspectionDto } from './dto/update-inspection.dto';
 import { InspectionStatus } from '../../common/enum/inspection-status.enum';
 import { InspectionItem } from './entities/inspection-item.entity';
 import { InspectionType } from '../lookup/entities/inspection_types.entity';
-import { Status } from 'src/common/enum/status';
+import { Status } from '../../common/enum/status';
+import { CryptoUtil } from '../../common/utils';
 
 @Injectable()
 export class InspectionsService {
@@ -51,12 +52,134 @@ export class InspectionsService {
 
   }
 
-  async findAll() {
-    return this.inspectionRepo.find({
+  async findAll(userId: string) {
+    const inspections = await this.inspectionRepo.find({
+      where: {
+        user_id: userId,
+        deleted_at: IsNull(),
+      },
       relations: {
-        property: true,
+        property: {
+          city: true,
+          state: true,
+          propertyType: true,
+        },
+        items: {
+          media: true,
+          inspectionType: true,
+        },
+      },
+      order: {
+        completed_at: 'DESC',
       },
     });
+
+    const completedInspections = inspections.filter((inspection) => inspection.status === InspectionStatus.COMPLETED,).length;
+
+    const draftInspections = inspections.filter((inspection) => inspection.status === InspectionStatus.DRAFT,).length;
+
+    const reports = inspections.map((inspection) => {
+      const items = inspection.items ?? [];
+
+      const passCount = items.filter(
+        (item) => String(item.answer).toLowerCase() === 'yes',
+      ).length;
+
+      const failCount = items.filter(
+        (item) => String(item.answer).toLowerCase() === 'no',
+      ).length;
+
+      const score =
+        passCount + failCount > 0
+          ? Math.round((passCount / (passCount + failCount)) * 100)
+          : 0;
+
+      return {
+        inspectionId: inspection.id,
+        status: inspection.status,
+        completedAt: inspection.completed_at,
+
+        property: {
+          id: inspection.property.id,
+          address: inspection.property.address,
+          postalCode: inspection.property.postal_code,
+          country: inspection.property.country,
+          houseUnitNo: inspection.property.house_unit_no,
+          beds: inspection.property.beds,
+          baths: inspection.property.baths,
+          ownerName: inspection.property.owner_name,
+          ownerEmail: inspection.property.owner_email
+            ? CryptoUtil.decrypt(inspection.property.owner_email)
+            : null,
+          ownerPhone: inspection.property.owner_phone
+            ? CryptoUtil.decrypt(inspection.property.owner_phone)
+            : null,
+          city: inspection.property.city,
+          state: inspection.property.state,
+          propertyType: inspection.property.propertyType,
+        },
+
+        summary: {
+          pass: passCount,
+          fail: failCount,
+          score,
+        },
+
+        items: items
+          .sort(
+            (a, b) =>
+              (a.inspectionType?.order_index ?? 0) -
+              (b.inspectionType?.order_index ?? 0),
+          )
+          .map((item) => ({
+            id: item.id,
+            inspectionId: item.inspection_id,
+            inspectionTypeId: item.inspection_type_id,
+
+            title: item.inspectionType?.title,
+            subtitle: item.inspectionType?.subtitle,
+            image: item.inspectionType?.image,
+            inputType: item.inspectionType?.input_type,
+            orderIndex: item.inspectionType?.order_index,
+
+            answer: item.answer,
+            note: item.note,
+
+            media: (item.media ?? []).map((media) => ({
+              id: media.id,
+              fileName: media.file_name,
+              fileUrl: media.file_url,
+              createdAt: media.created_at,
+              createdBy: media.created_by,
+            })),
+          })),
+      };
+    });
+
+    const totalPass = reports.reduce(
+      (sum, report) => sum + report.summary.pass,
+      0,
+    );
+
+    const totalFail = reports.reduce(
+      (sum, report) => sum + report.summary.fail,
+      0,
+    );
+
+    const overallScore =
+      totalPass + totalFail > 0
+        ? Math.round((totalPass / (totalPass + totalFail)) * 100)
+        : 0;
+
+    return {
+      total_inspections: inspections.length,
+      completed_inspections: completedInspections,
+      draft_inspections: draftInspections,
+      pass: totalPass,
+      fail: totalFail,
+      score: overallScore,
+      availableReports: reports,
+    };
   }
 
   async findOne(id: string) {
@@ -277,4 +400,6 @@ export class InspectionsService {
       status: InspectionStatus.COMPLETED,
     };
   }
+
+
 }

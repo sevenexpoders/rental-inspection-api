@@ -7,6 +7,7 @@ import {
   Param,
   Body,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -47,8 +48,8 @@ export class InspectionsController {
   }
 
   @Get()
-  findAll() {
-    return this.inspectionsService.findAll();
+  findAll(@CurrentUser() user: any,) {
+    return this.inspectionsService.findAll(user.userId);
   }
 
   @Delete(':id')

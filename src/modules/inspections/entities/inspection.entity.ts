@@ -7,7 +7,9 @@ import {
   Column,
   JoinColumn,
   ManyToOne,
+  OneToMany,
 } from 'typeorm';
+import { InspectionItem } from './inspection-item.entity';
 
 @Entity('inspections')
 export class Inspection extends BaseEntity {
@@ -18,26 +20,30 @@ export class Inspection extends BaseEntity {
   @Column({ type: 'uuid' })
   user_id!: string;
 
-  @Column({ type: 'varchar', length: 20,  default: 'draft',})
+  @Column({ type: 'varchar', length: 20, default: 'draft', })
   status!: string;
 
-  @Column({type: 'timestamp',nullable: true,})
+  @Column({ type: 'timestamp', nullable: true, })
   completed_at?: Date;
 
-  
-  @Column({ type: 'uuid', nullable: true,})
+
+  @Column({ type: 'uuid', nullable: true, })
   created_by?: string;
 
-  @Column({type: 'uuid',nullable: true, })
+  @Column({ type: 'uuid', nullable: true, })
   updated_by?: string;
 
-  @Column({ type: 'uuid',nullable: true,})
+  @Column({ type: 'uuid', nullable: true, })
   deleted_by?: string;
 
+  @ManyToOne(() => Property, (property) => property.inspections)
   @JoinColumn({ name: 'property_id' })
   property!: Property;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user!: User;
+
+  @OneToMany(() => InspectionItem,(inspectionItem) => inspectionItem.inspection,)
+  items!: InspectionItem[];
 }
