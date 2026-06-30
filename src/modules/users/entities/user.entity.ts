@@ -1,7 +1,8 @@
 import { Entity, Column, ManyToMany, JoinTable, OneToMany, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../../../common/entities/base.entity';
-import { Role } from './role.entity';
+
 import { RefreshToken } from '../../../modules/auth/entities/refresh-token.entity';
+import { Role } from '../../../modules/lookup/entities';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -11,9 +12,6 @@ export class User extends BaseEntity {
 
   @Column({ type: 'varchar', length: 100 })
   last_name!: string;
-
-  @Column({ type: 'varchar', unique: true })
-  email!: string;
 
   @Column({ type: 'varchar', unique: true })
   email_hash!: string;

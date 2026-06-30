@@ -202,7 +202,6 @@ export class UsersService {
         id: true,
         first_name: true,
         last_name: true,
-        email: true,
         status: true,
       },
     });
@@ -316,12 +315,12 @@ export class UsersService {
 
     return {
       overview: {
-        totalProperties,
-        totalInspections,
-        completedInspections,
-        inProgressInspections,
-        draftInspections: pendingInspections,
-        compliancePercentage,
+        total_properties:totalProperties,
+        total_inspections:totalInspections,
+        completed_inspections:completedInspections,
+        in_progress_inspections:inProgressInspections,
+        draft_inspections: pendingInspections,
+        compliance_percentage:compliancePercentage,
       }
     };
   }
@@ -448,7 +447,7 @@ export class UsersService {
       pass: totalPass,
       fail: totalFail,
       score: overallScore,
-      availableReports: reports,
+      available_reports: reports,
     };
   }
 

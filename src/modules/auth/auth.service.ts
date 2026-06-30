@@ -78,7 +78,6 @@ export class AuthService {
     const user = this.userRepo.create({
       first_name: dto.first_name,
       last_name: dto.last_name,
-      email: encryptedEmail,
       password_hash: hashedPassword,
       email_encrypted: encryptedEmail,
       email_hash: emailHash,
@@ -120,7 +119,6 @@ export class AuthService {
           id: true,
           first_name: true,
           last_name: true,
-          email: true,
           phone: true,
           password_hash: true,
           status: true,

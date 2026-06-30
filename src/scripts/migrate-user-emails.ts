@@ -11,20 +11,20 @@ async function run() {
   const users = await repo.find();
 
   for (const user of users) {
-    if (user.email && !user.email_hash) {
-      const email = user.email.toLowerCase().trim();
+    // if (user.email && !user.email_hash) {
+    //   const email = user.email.toLowerCase().trim();
 
-      user.email_hash = crypto
-        .createHash('sha256')
-        .update(email)
-        .digest('hex');
+    //   user.email_hash = crypto
+    //     .createHash('sha256')
+    //     .update(email)
+    //     .digest('hex');
 
-      user.email_encrypted = CryptoUtil.encrypt(email);
+    //   user.email_encrypted = CryptoUtil.encrypt(email);
 
-      await repo.save(user);
+    //   await repo.save(user);
 
-      console.log(`Migrated: ${user.id}`);
-    }
+    //   console.log(`Migrated: ${user.id}`);
+    // }
   }
 
   console.log('Migration completed');

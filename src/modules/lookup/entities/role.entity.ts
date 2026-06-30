@@ -1,8 +1,10 @@
+import { User } from '../../../modules/users/entities';
 import { Status } from '../../../common/enum/status';
 import {
     Entity,
     Column,
     PrimaryGeneratedColumn,
+    ManyToMany,
 } from 'typeorm';
 
 @Entity('roles')
@@ -27,4 +29,7 @@ export class Role {
 
     @Column({ nullable: true, length: 100, })
     display_name?: string;
+
+    @ManyToMany(() => User, user => user.roles)
+    users!: User[];
 }

@@ -9,6 +9,7 @@ import compression from 'compression';
 import helmet from 'helmet';
 
 async function bootstrap() {
+   console.log('AWS_BUCKET_NAME=', process.env.AWS_BUCKET_NAME);
   // const app = await NestFactory.create(AppModule);
   FirebaseUtil.initialize();
   const app = await NestFactory.create<NestExpressApplication>(AppModule);

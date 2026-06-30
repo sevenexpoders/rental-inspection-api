@@ -12,6 +12,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuditLogModule } from './modules/audit-logs/audit-log.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { UploadModule } from './modules/upload/upload.module';
 
 @Module({
   imports: [
@@ -26,7 +27,8 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     InspectionsModule,
     LookupModule,
     AuditLogModule,
-    NotificationsModule
+    NotificationsModule,
+    UploadModule
   ],
   controllers: [AppController],
   providers: [AppService],
