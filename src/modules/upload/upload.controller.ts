@@ -5,7 +5,8 @@ import {
   Post,
   UploadedFile,
   UseInterceptors,
-  UploadedFiles
+  UploadedFiles,
+  UseGuards
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
@@ -13,8 +14,10 @@ import { UploadFileDto } from './dto/upload-file.dto';
 import { multerS3Options } from './upload.provider';
 import { UploadService } from './upload.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../auth/guards';
 
 @Controller('upload')
+@UseGuards(JwtAuthGuard)
 export class UploadController {
   constructor(private readonly uploadService: UploadService) { }
 

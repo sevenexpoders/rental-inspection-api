@@ -10,11 +10,14 @@ export const multerS3Options = {
     bucket: S3_BUCKET!,
     contentType: multerS3.AUTO_CONTENT_TYPE,
     key: (req: Request, file, cb) => {
-      const id = (req.body as any)?.id ?? '5d8bca7e-fd6e-4f89-ac3b-0a185210ce76';
+      // const id = (req.body as any)?.id;
+      const inspectionId = req.params.inspection_id;
 
-      if (!id) {
+       if (!inspectionId) {
         return cb(
-          new BadRequestException('id is required for upload') as any,
+          new BadRequestException(
+            'inspection_id is required',
+          ) as any,
           '',
         );
       }
@@ -24,7 +27,7 @@ export const multerS3Options = {
 
       const ext = extname(file.originalname);
       const fileName = `${file.fieldname}-${uniqueSuffix}${ext}`;
-      const filePath = `users/${id}/${fileName}`;
+      const filePath = `users/${inspectionId}/${fileName}`;
 
       cb(null, filePath);
     },
