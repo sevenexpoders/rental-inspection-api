@@ -1,11 +1,15 @@
+import { Role } from 'src/modules/lookup/entities';
 import {
     Column,
     CreateDateColumn,
     DeleteDateColumn,
     Entity,
+    JoinColumn,
+    ManyToOne,
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
+ 
 
 @Entity('property_invitations')
 export class PropertyInvitation {
@@ -23,10 +27,14 @@ export class PropertyInvitation {
     })
     email!: string;
 
+    @ManyToOne(() => Role)
+    @JoinColumn({ name: 'role_id' })
+    role!: Role;
+
     @Column({
-        length: 50,
+        type: 'uuid',
     })
-    role_type!: string;
+    role_id!: string;
 
     @Column({
         type: 'uuid',

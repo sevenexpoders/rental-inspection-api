@@ -16,9 +16,9 @@ export class CreatePropertyInvitationDto {
     @IsNotEmpty()
     email!: string;
 
-    @IsString()
+    @IsUUID()
     @IsNotEmpty()
-    roleType!: string;
+    roleId!: string;
 
     @IsOptional()
     @IsString()

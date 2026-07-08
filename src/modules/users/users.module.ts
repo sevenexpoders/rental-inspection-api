@@ -6,9 +6,10 @@ import { User } from './entities';
 import { Property } from '../properties/entities';
 import { Inspection, InspectionItem } from '../inspections/entities';
 import { Role } from '../lookup/entities';
+import { PropertyParty } from '../property-parties/entities';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Role, Property, Inspection, InspectionItem])],
+  imports: [TypeOrmModule.forFeature([User, Role, Property, Inspection, InspectionItem, PropertyParty])],
   controllers: [UsersController],
   providers: [UsersService],
   exports: [UsersService],

@@ -5,6 +5,8 @@ import { PropertyInvitationsController } from '../../modules/property-invitation
 import { PropertyInvitationsService } from '../../modules/property-invitations/property-invitations.service';
 import { Property } from 'src/modules/properties/entities';
 import { User } from 'src/modules/users/entities'; 
+import { PropertyParty } from '../property-parties/entities';
+import { Role } from '../lookup/entities';
  
 
 @Module({
@@ -13,6 +15,8 @@ import { User } from 'src/modules/users/entities';
       PropertyInvitation,
       Property,
       User,
+      Role,
+      PropertyParty
     ]),
   ],
   controllers: [
