@@ -16,8 +16,19 @@ export class ResponseInterceptor<T>
     context: ExecutionContext,
     next: CallHandler,
   ): Observable<any> {
+
+    const request =
+      context.switchToHttp().getRequest();
+
     const response =
       context.switchToHttp().getResponse();
+
+    // Don't wrap Android App Links file
+    if (
+      request.path === '/.well-known/assetlinks.json'
+    ) {
+      return next.handle();
+    }
 
     return next.handle().pipe(
       map((data) => ({

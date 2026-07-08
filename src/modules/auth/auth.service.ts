@@ -110,28 +110,60 @@ export class AuthService {
       }
       const emailHash = HashUtil.sha256(dto.email);
 
+      // const user = await this.userRepo.findOne({
+      //   where: {
+      //     email_hash: emailHash,
+      //     status: Status.ACTIVE,
+      //   },
+      //   // select: {
+      //   //   id: true,
+      //   //   first_name: true,
+      //   //   last_name: true,
+      //   //   phone: true,
+      //   //   password_hash: true,
+      //   //   status: true,
+      //   //   terms_accepted: true,
+      //   //   email_encrypted: true,
+      //   //   // roles: {
+      //   //   //   id: true,
+      //   //   //   name: true,
+      //   //   //   display_name: true,
+      //   //   // },
+      //   //   roles: {
+      //   //     id: true,
+      //   //     name: true,
+      //   //     display_name: true,
+      //   //     rolePermissions: {
+      //   //       permission: {
+      //   //         id: true,
+      //   //         name: true,
+      //   //         display_name: true,
+      //   //       },
+      //   //     },
+      //   //   },
+      //   // },
+      //   // relations: {
+      //   //   roles: true,
+      //   // },
+      //   relations: {
+      //   roles: {
+      //     rolePermissions: {
+      //       permission: true,
+      //     },
+      //   },
+      // },
+      // });
       const user = await this.userRepo.findOne({
         where: {
           email_hash: emailHash,
           status: Status.ACTIVE,
         },
-        select: {
-          id: true,
-          first_name: true,
-          last_name: true,
-          phone: true,
-          password_hash: true,
-          status: true,
-          terms_accepted: true,
-          email_encrypted: true,
-          roles: {
-            id: true,
-            name: true,
-            display_name: true,
-          },
-        },
         relations: {
-          roles: true,
+          roles: {
+            rolePermissions: {
+              permission: true,
+            },
+          },
         },
       });
 
@@ -148,6 +180,20 @@ export class AuthService {
           'Invalid credentials',
         );
       }
+      // const permissions = [
+      //     ...new Set(
+      //       user.roles.flatMap(role =>
+      //         role.rolePermissions.map(rp => rp.permission.name),
+      //       ),
+      //     ),
+      //   ];
+      const permissions = [
+          ...new Set(
+            user.roles.flatMap(role =>
+              role.rolePermissions?.map(rp => rp.permission.name) ?? [],
+            ),
+          ),
+        ];
       if (dto.fcm_token && dto.device_id) {
 
         const existing = await this.userFcmTokenRepo.findOne({
@@ -180,6 +226,7 @@ export class AuthService {
         roles: user.roles?.map(
           role => role.name,
         ),
+        permissions: permissions,
       };
 
       const accessToken = this.jwtService.sign(
@@ -248,9 +295,14 @@ export class AuthService {
             email: decryptedEmail,
             phone: decryptedPhone,
             status: user.status,
-            role:
-              user.roles?.[0]?.name ??
-              null,
+            // role:  user.roles?.[0]?.name ?? null,
+             roles: user.roles.map(role => ({
+                id: role.id,
+                name: role.name,
+                display_name: role.display_name,
+            })),
+
+            permissions: permissions,
           },
         },
       }

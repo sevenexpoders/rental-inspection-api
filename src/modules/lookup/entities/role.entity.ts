@@ -5,7 +5,9 @@ import {
     Column,
     PrimaryGeneratedColumn,
     ManyToMany,
+    OneToMany,
 } from 'typeorm';
+import { RolePermission } from './role-permission.entity';
 
 @Entity('roles')
 export class Role {
@@ -32,4 +34,7 @@ export class Role {
 
     @ManyToMany(() => User, user => user.roles)
     users!: User[];
+
+    @OneToMany(() => RolePermission, rp => rp.role,)
+    rolePermissions!: RolePermission[];
 }

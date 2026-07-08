@@ -13,13 +13,25 @@ import { AppService } from './app.service';
 import { AuditLogModule } from './modules/audit-logs/audit-log.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { UploadModule } from './modules/upload/upload.module';
+import { InvitationsModule } from './modules/invitations/invitations.module';
+import { PropertyInvitationsModule } from './modules/property-invitations/property-invitations.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+import { WellKnownController } from './well-known.controller';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+      serveRoot: '/',
+      exclude: ['/api*'],
+    }),
     TypeOrmModule.forRoot(databaseConfig()),
+
     AuthModule,
     UsersModule,
     PropertiesModule,
@@ -28,9 +40,11 @@ import { UploadModule } from './modules/upload/upload.module';
     LookupModule,
     AuditLogModule,
     NotificationsModule,
-    UploadModule
+    UploadModule,
+    InvitationsModule,
+    PropertyInvitationsModule
   ],
-  controllers: [AppController],
+  controllers: [AppController, WellKnownController],
   providers: [AppService],
 })
 export class AppModule { }

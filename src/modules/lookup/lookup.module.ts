@@ -9,6 +9,7 @@ import { City } from './entities/city.entity';
 import { PropertyType } from './entities/property-type.entity';
 import { Role } from './entities/role.entity';
 import { InspectionType } from './entities/inspection_types.entity';
+import { Permission, RolePermission } from './entities';
 
 @Module({
   imports: [
@@ -17,7 +18,9 @@ import { InspectionType } from './entities/inspection_types.entity';
       City,
       PropertyType,
       Role,
-      InspectionType
+      InspectionType,
+      Permission,
+      RolePermission,
     ]),
   ],
   controllers: [LookupController],

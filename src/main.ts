@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { RequestMethod, ValidationPipe } from '@nestjs/common';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { FirebaseUtil } from './common/utils/firebase.util';
@@ -24,7 +24,14 @@ async function bootstrap() {
   );
 
   app.enable('trust proxy');
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api', {
+  exclude: [
+    {
+      path: '.well-known/assetlinks.json',
+      method: RequestMethod.GET,
+    },
+  ],
+});
 
 
   app.enableCors({

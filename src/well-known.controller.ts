@@ -1,0 +1,28 @@
+import { Controller, Get } from '@nestjs/common';
+
+@Controller('.well-known')
+export class WellKnownController {
+
+  @Get('test')
+  test() {
+    return { ok: true };
+  }
+
+  @Get('assetlinks.json')
+  assetlinks() {
+    return [
+      {
+        relation: [
+          'delegate_permission/common.handle_all_urls',
+        ],
+        target: {
+          namespace: 'android_app',
+          package_name: 'com.app.rental_minimum_standards_mobile',
+          sha256_cert_fingerprints: [
+            '69:AA:A1:65:83:09:9B:F5:21:99:1A:F6:A5:F5:1F:B2:55:87:89:81:E4:FB:69:F9:AE:84:F2:78:3A:14:D8:50',
+          ],
+        },
+      },
+    ];
+  }
+}
