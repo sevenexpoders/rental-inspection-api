@@ -31,6 +31,7 @@ import { EmailUtil } from 'src/common/utils/email.util';
 import { User } from '../users/entities';
 import { CryptoUtil, HashUtil, PasswordUtil } from 'src/common/utils';
 import { AcceptInvitationDto } from './dto/accept-invitation.dto';
+import { ROLES } from 'src/common/constants/roles.constant';
 
 @Injectable()
 export class InvitationsService {
@@ -60,26 +61,26 @@ export class InvitationsService {
 
         let allowed: string[] = [];
 
-        if (role === 'landlord') {
+        if (role === ROLES.LANDLORD) {
 
             allowed = [
-                'landlord',
-                'property_manager',
-                'technician',
+                ROLES.LANDLORD,
+                ROLES.PROPERTY_MANAGER,
+                ROLES.TECHNICIAN,
             ];
 
         }
 
-        if (role === 'property_manager') {
+        if (role === ROLES.PROPERTY_MANAGER) {
 
             allowed = [
-                'landlord',
-                'technician',
+                ROLES.LANDLORD,
+                ROLES.TECHNICIAN,
             ];
 
         }
 
-        if (role === 'technician') {
+        if (role === ROLES.TECHNICIAN) {
 
             allowed = [];
 
@@ -125,8 +126,8 @@ export class InvitationsService {
         //----------------------------------
 
         if (
-            role === 'property_manager' &&
-            invitedRole.name === 'property_manager'
+            role === ROLES.PROPERTY_MANAGER &&
+            invitedRole.name === ROLES.PROPERTY_MANAGER
         ) {
 
             throw new BadRequestException(
@@ -136,7 +137,7 @@ export class InvitationsService {
         }
 
         if (
-            role === 'technician'
+            role === ROLES.TECHNICIAN
         ) {
 
             throw new BadRequestException(

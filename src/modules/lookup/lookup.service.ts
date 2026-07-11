@@ -1,12 +1,13 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { IsNull, Repository } from "typeorm";
+import { IsNull, Not, Repository } from "typeorm";
 import { State } from "./entities/state.entity";
 import { City } from "./entities/city.entity";
 import { PropertyType } from "./entities/property-type.entity";
 import { Role } from "./entities/role.entity";
 import { Status } from "../../common/enum/status";
 import { InspectionType } from "./entities/inspection_types.entity";
+import { ROLES } from "src/common/constants/roles.constant";
 
 
 @Injectable()
@@ -74,7 +75,10 @@ export class LookupService {
 
   async getRoles() {
     return this.roleRepo.find({
-      where: { status: Status.ACTIVE },
+      where: {
+        status: Status.ACTIVE,
+        name: Not(ROLES.SUPER_ADMIN),
+      },
       select: {
         id: true,
         icon_name: true,

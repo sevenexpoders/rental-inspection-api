@@ -29,12 +29,35 @@ export class User extends BaseEntity {
   status!: string;
 
   @Column({
+    type: 'varchar',
+    length: 20,
+    default: 'not_started',
+  })
+  verification_status!: string;
+
+  @Column({
+    type: 'timestamp',
+    nullable: true,
+  })
+  verified_at?: Date;
+
+  @Column({
+    type: 'uuid',
+    nullable: true,
+  })
+  verified_by?: string;
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'verified_by' })
+  verifiedBy?: User;
+
+  @Column({
     type: 'boolean',
     default: false,
   })
   terms_accepted!: boolean;
 
- @Column({type: 'timestamptz', nullable: true,})
+  @Column({ type: 'timestamptz', nullable: true, })
   terms_accepted_at?: Date | null;
 
   @OneToMany(() => RefreshToken, (t) => t.user)

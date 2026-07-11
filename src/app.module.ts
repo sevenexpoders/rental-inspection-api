@@ -18,6 +18,8 @@ import { PropertyInvitationsModule } from './modules/property-invitations/proper
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { WellKnownController } from './well-known.controller';
+import { TechnicianVerificationModule } from './modules/technician-verification/technician-verification.module';
+import { AdminVerificationModule } from './modules/admin-verification/admin-verification.module';
 
 @Module({
   imports: [
@@ -42,7 +44,9 @@ import { WellKnownController } from './well-known.controller';
     NotificationsModule,
     UploadModule,
     InvitationsModule,
-    PropertyInvitationsModule
+    PropertyInvitationsModule,
+    TechnicianVerificationModule,
+    AdminVerificationModule
   ],
   controllers: [AppController, WellKnownController],
   providers: [AppService],

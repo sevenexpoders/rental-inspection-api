@@ -157,19 +157,19 @@ export class PropertyInvitationsService {
             ? `${property.house_unit_no}, ${property.address}`
             : 'Property';
 
-        await EmailUtil.sendPropertyInvitation(
-
+        // Send email in background
+        EmailUtil.sendPropertyInvitation(
             dto.email,
-
             inviteLink,
-
             propertyName,
-
             role.display_name ?? role.name,
-
             dto.message,
-
-        );
+        ).catch((error) => {
+            console.error(
+                'Property invitation email failed:',
+                error,
+            );
+        });
 
         //---------------------------------------
 
@@ -628,20 +628,20 @@ export class PropertyInvitationsService {
             ? `${property.house_unit_no}, ${property.address}`
             : 'Property';
 
-        await EmailUtil.sendPropertyInvitation(
 
+        // Send email in background
+        EmailUtil.sendPropertyInvitation(
             invitation.email,
-
             inviteLink,
-
             propertyName,
-
-            invitation.role.display_name ??
-            invitation.role.name,
-
+            invitation.role.display_name ?? invitation.role.name,
             invitation.message,
-
-        );
+        ).catch((error) => {
+            console.error(
+                'Property invitation email failed:',
+                error,
+            );
+        });
 
         return {
 
@@ -683,9 +683,9 @@ export class PropertyInvitationsService {
         // Get Invitations
         //---------------------------------------
         const decryptedEmail =
-              CryptoUtil.decrypt(
+            CryptoUtil.decrypt(
                 dbUser.email_encrypted,
-              );
+            );
         const invitations =
             await this.propertyInvitationRepo.find({
 

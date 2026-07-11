@@ -7,13 +7,14 @@ import { FirebaseUtil } from './common/utils/firebase.util';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import compression from 'compression';
 import helmet from 'helmet';
+import { EmailUtil } from './common/utils/email.util';
 
 async function bootstrap() {
-   console.log('AWS_BUCKET_NAME=', process.env.AWS_BUCKET_NAME);
+  console.log('AWS_BUCKET_NAME=', process.env.AWS_BUCKET_NAME);
   // const app = await NestFactory.create(AppModule);
   FirebaseUtil.initialize();
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-
+  // await app.listen(process.env.PORT ?? 3000);
   app.use(compression());
 
   app.use(
@@ -25,13 +26,13 @@ async function bootstrap() {
 
   app.enable('trust proxy');
   app.setGlobalPrefix('api', {
-  exclude: [
-    {
-      path: '.well-known/assetlinks.json',
-      method: RequestMethod.GET,
-    },
-  ],
-});
+    exclude: [
+      {
+        path: '.well-known/assetlinks.json',
+        method: RequestMethod.GET,
+      },
+    ],
+  });
 
 
   app.enableCors({
@@ -54,7 +55,7 @@ async function bootstrap() {
   app.useGlobalFilters(
     new HttpExceptionFilter(),
   );
-
+  await EmailUtil.verifyConnection();
   const port = process.env.PORT || 3000;
 
   await app.listen(port);
