@@ -513,34 +513,7 @@ export class UsersService {
   //   };
   // }
   async getReportsSummary(userId: string) {
-    // const inspections = await this.inspectionRepo.find({
-    //   where: {
-    //     user_id: userId,
-    //     status: InspectionStatus.COMPLETED,
-    //     deleted_at: IsNull(),
-    //   },
-    //   relations: {
-    //     property: {
-    //       city: true,
-    //       state: true,
-    //       propertyType: true,
-    //     },
-    //     items: {
-    //       media: true,
-    //       inspectionType: true,
-    //     },
-    //   },
-    //   order: {
-    //     completed_at: 'DESC',
-    //   },
-    // });
-
-    // Get all property creator ids
-
-    //---------------------------------------
-    // My Properties
-    //---------------------------------------
-
+     
     const myProperties =
       await this.propertyRepo.find({
 

@@ -20,6 +20,14 @@ import { join } from 'path';
 import { WellKnownController } from './well-known.controller';
 import { TechnicianVerificationModule } from './modules/technician-verification/technician-verification.module';
 import { AdminVerificationModule } from './modules/admin-verification/admin-verification.module';
+import { AdminDashboardModule } from './modules/admin-dashboard/admin-dashboard.module';
+import { AdminUsersModule } from './modules/admin-users/admin-users.module';
+import { TechnicianDashboardModule } from './modules/technician-dashboard/technician-dashboard.module';
+import { TechnicianInspectionsModule } from './modules/technician-inspections/technician-inspections.module';
+import { TechnicianReportsModule } from './modules/technician-reports/technician-reports.module';
+import { AdminPropertiesModule } from './modules/admin-properties/admin-properties.module';
+import { AdminInspectionsModule } from './modules/admin-inspections/admin-inspections.module';
+import { AdminReportsModule } from './modules/admin-reports/admin-reports.module';
 
 @Module({
   imports: [
@@ -46,7 +54,15 @@ import { AdminVerificationModule } from './modules/admin-verification/admin-veri
     InvitationsModule,
     PropertyInvitationsModule,
     TechnicianVerificationModule,
-    AdminVerificationModule
+    AdminVerificationModule,
+    AdminDashboardModule,
+    AdminUsersModule,
+    TechnicianDashboardModule,
+    TechnicianInspectionsModule,
+    TechnicianReportsModule,
+    AdminPropertiesModule,
+    AdminInspectionsModule,
+    AdminReportsModule
   ],
   controllers: [AppController, WellKnownController],
   providers: [AppService],
