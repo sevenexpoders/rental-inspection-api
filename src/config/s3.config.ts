@@ -9,7 +9,7 @@ console.log("S3_BUCKET==>",S3_BUCKET)
 export const s3 = new S3Client({
     region: process.env.AWS_REGION,
     credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY!,
+        accessKeyId: process.env.AWS_ACCESS_KEY || "tid_GFRXjxHjXsFHrAvTPfqloNiwFMDDJjOldSBBTTbgRVKhUndAwW",
         secretAccessKey: process.env.AWS_SECRET_KEY!,
     },
     endpoint: process.env.AWS_ENDPOINT, 
